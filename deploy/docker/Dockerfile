@@ -34,6 +34,11 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 
+# Defaults for a local `docker build`. The released image (release.yml) gets its
+# labels from docker/metadata-action, which overrides these: source is the repo
+# that built it (here paulshannon/tiny-flag), version the tag, revision the
+# commit. This file is shared with paulshannon/game-starter, so the local default
+# source stays the starter's.
 ARG VERSION=dev
 ARG REVISION=unknown
 LABEL org.opencontainers.image.title="game-server" \
