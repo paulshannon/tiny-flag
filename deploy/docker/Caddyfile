@@ -14,6 +14,9 @@
 	handle_path /ws/3d* {
 		reverse_proxy game-3d:9080
 	}
+	handle_path /ws/flag* {
+		reverse_proxy game-flag:9080
+	}
 	# Static web export (unzip a release's game-web-vX.Y.Z.zip into WEB_DIR).
 	handle {
 		root * /srv/web

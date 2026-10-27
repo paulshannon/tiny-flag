@@ -1,11 +1,12 @@
 # Deploying a prototype
 
-One small Linux VPS runs both game servers and serves the web build over HTTPS.
+One small Linux VPS runs every game server (Tiny Flag, plus the 2D and 3D skeletons) and serves the web build over HTTPS.
 
 ```
 browser ──https──▶ Caddy ──▶ /srv/kenney-mp/web          (static web export)
         ──wss────▶ Caddy ──▶ 127.0.0.1:9080  (2D server, kenney-mp@2d)
-                         └─▶ 127.0.0.1:9081  (3D server, kenney-mp@3d)
+                         ├─▶ 127.0.0.1:9081  (3D server, kenney-mp@3d)
+                         └─▶ 127.0.0.1:9082  (Tiny Flag server, kenney-mp@flag)
 ```
 
 Why this shape: an HTTPS page may only open `wss://` sockets, and the Godot server speaks plain `ws://`. Caddy gets a certificate automatically and terminates TLS for both the page and the sockets, so the game servers stay simple and bind to localhost only.
@@ -31,17 +32,17 @@ Why this shape: an HTTPS page may only open `wss://` sockets, and the Godot serv
    rsync -av build/web/    you@host:/srv/kenney-mp/web/
    rsync -av build/server/ you@host:/srv/kenney-mp/server/
    ```
-3. **Services** (once): create a `kenney` user, install `kenney-mp@.service`, `systemctl enable --now kenney-mp@2d kenney-mp@3d` (enable only the games you're hosting).
+3. **Services** (once): create a `kenney` user, install `kenney-mp@.service`, `systemctl enable --now kenney-mp@flag kenney-mp@2d kenney-mp@3d` (enable only the games you're hosting).
 4. **Caddy** (once): put `Caddyfile` in `/etc/caddy/Caddyfile` with your domain, `systemctl reload caddy`.
-5. Open `https://your-domain/?game=2d` or `?game=3d`.
+5. Open `https://your-domain/` (Tiny Flag, the default), or `?game=flag`, `?game=2d`, `?game=3d`.
 
 Firewall: only 80 and 443 need to be open. 9080/9081/9082 stay closed because the servers bind to 127.0.0.1.
 
 ## Docker (alternative to systemd)
 
-Each release pushes the server image to **`ghcr.io/<owner>/game-server`** (tags `X.Y.Z`, `X.Y`, `latest`). It's the same verified binary as the Release asset, on `debian:bookworm-slim`, running as a non-root user (UID 10001) with `HOME=/data` (a volume; Godot needs a writable home, see paulshannon/game#3). One game per container: `GAME=2d|3d`, listening on **9080 inside the container** whatever the game. A TCP healthcheck is built in, and `docker stop` ends it immediately (the entrypoint forwards SIGTERM).
+Each release pushes the server image to **`ghcr.io/<owner>/game-server`** (tags `X.Y.Z`, `X.Y`, `latest`). It's the same verified binary as the Release asset, on `debian:bookworm-slim`, running as a non-root user (UID 10001) with `HOME=/data` (a volume; Godot needs a writable home, see paulshannon/game#3). One game per container: `GAME=flag|2d|3d`, listening on **9080 inside the container** whatever the game. A TCP healthcheck is built in, and `docker stop` ends it immediately (the entrypoint forwards SIGTERM).
 
-**Compose** (`deploy/docker-compose.yml`): `game-2d` and `game-3d` containers behind Caddy, which provides automatic HTTPS and proxies `wss://DOMAIN/ws/<game>` to each. No game port is published.
+**Compose** (`deploy/docker-compose.yml`): `game-flag`, `game-2d` and `game-3d` containers behind Caddy, which provides automatic HTTPS and proxies `wss://DOMAIN/ws/<game>` to each. No game port is published.
 ```bash
 cd deploy
 mkdir -p web && unzip -o game-web-vX.Y.Z.zip -d web    # the release's web build

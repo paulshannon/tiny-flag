@@ -37,7 +37,7 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 ARG VERSION=dev
 ARG REVISION=unknown
 LABEL org.opencontainers.image.title="game-server" \
-	org.opencontainers.image.description="Headless Godot 4.7 dedicated server for the Kenney multiplayer prototypes (GAME=2d|3d)" \
+	org.opencontainers.image.description="Headless Godot 4.7 dedicated server for the Kenney multiplayer prototypes (GAME=flag|2d|3d)" \
 	org.opencontainers.image.source="https://github.com/paulshannon/game-starter" \
 	org.opencontainers.image.version="$VERSION" \
 	org.opencontainers.image.revision="$REVISION"

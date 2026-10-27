@@ -1,6 +1,6 @@
 #!/bin/sh
 # Container entrypoint: one game server per container.
-#   GAME  2d | 3d   (default 2d)
+#   GAME  flag | 2d | 3d   (default 2d)
 #   PORT  listen port inside the container (default 9080, whatever the game;
 #         map it to anything on the host)
 # Extra arguments are passed to the server after its own, e.g.

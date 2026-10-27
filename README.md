@@ -62,7 +62,8 @@ common/net/              transport (Net autoload), protocol constants, launch co
 common/sim/              pure movement rules (ArenaSim) — server-run, unit-tested
 common/game/             GameBase: spawning, despawning, smoke-test reporting
 client/                  interpolation buffer, input actions, HUD
-games/box_arena_2d|3d/   the two prototypes
+games/tiny_flag/         Tiny Flag, turn-based capture the flag (games/tiny_flag/README.md)
+games/box_arena_2d|3d/   the two starter skeletons
 tests/                   tiny test runner + unit tests
 tools/                   every command (install, check, test, smoke, export, serve, Kenney)
 deploy/                  Caddy (HTTPS + wss) and systemd for a single VPS

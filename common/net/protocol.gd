@@ -4,10 +4,11 @@ extends RefCounted
 ## live in one place. Change them here, never inline in game scripts.
 
 ## The game you get when none is named (no --game, no ?game=, or an unknown one).
-const DEFAULT_GAME: String = "2d"
+const DEFAULT_GAME: String = "flag"
 
-## One port per game so a single VPS can run both prototypes side by side.
+## One port per game so a single VPS can run every prototype side by side.
 const PORTS: Dictionary = {   # in menu order (tools/make_site.sh lists them so)
+	"flag": 9082,
 	"2d": 9080,
 	"3d": 9081,
 }

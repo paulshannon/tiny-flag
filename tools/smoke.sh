@@ -5,7 +5,7 @@
 #   - no ERROR / SCRIPT ERROR lines appear in any log, apart from the
 #     documented benign ones in tools/smoke_allowlist.txt
 #
-# Usage: tools/smoke.sh [2d|3d|all] [seconds=8] [clients=2]
+# Usage: tools/smoke.sh [2d|3d|flag|all] [seconds=8] [clients=2]
 #        SERVER_BIN=build/server/server.x86_64 tools/smoke.sh   # test the export
 #        SERVER_IMAGE=game-server:ci tools/smoke.sh   # test the Docker image
 #            (deploy/docker/Dockerfile; the container's 9080 is published on
@@ -119,6 +119,7 @@ status=0
 if [[ "$GAME" == "all" ]]; then
   $run 2d || status=1
   $run 3d || status=1
+  $run flag || status=1
 else
   $run "$GAME" || status=1
 fi
