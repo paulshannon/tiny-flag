@@ -82,3 +82,36 @@ func _collect(n: Node, out: Array[String]) -> void:
 		out.append((n as Button).text)
 	for c: Node in n.get_children():
 		_collect(c, out)
+
+
+## match_over arrives right after the last turn_resolved: the result banner waits until
+## the board has played that turn, so it doesn't cover the winning move.
+func test_result_banner_waits_for_the_final_playback() -> void:
+	var tree := Engine.get_main_loop() as SceneTree
+	var m := FlagMap.load_map(FlagMap.FARM_PATH)
+	var client := FlagClient.new(null)  # not in the tree: its _ready wiring isn't needed
+	client.board = BoardView.new()
+	client.board.set_map(m)
+	client.model = OrderModel.new(m)  # a spectator's: playback_done is never sent
+	client.hud = TurnHud.new()
+	tree.root.add_child(client.hud)
+	var s := FlagState.new_match(m)
+	var turn := FlagWire.turn_for(m, FlagResolver.resolve(m, s, {}), FlagWire.SPECTATOR)
+	var over := {"result": FlagState.Result.RED_WINS, "score": [3, 1]}
+	client.board.play_turn(turn)
+	client._on_match_over(over)
+	assert_false(client.hud._result_box.visible, "hidden while the last turn plays")
+	var guard := 0
+	while client.board.is_playing() and guard < 1000:
+		client.board._process(0.1)
+		guard += 1
+	client._on_playback_finished(int(turn["turn"]))
+	assert_true(client.hud._result_box.visible, "shown once the playback ends")
+	# No playback running: shown at once.
+	client.hud.on_turn_started(30.0, {"team": FlagWire.SPECTATOR, "turn": 0})
+	assert_false(client.hud._result_box.visible)
+	client._on_match_over(over)
+	assert_true(client.hud._result_box.visible, "shown at once with nothing playing")
+	client.hud.free()
+	client.board.free()
+	client.free()
