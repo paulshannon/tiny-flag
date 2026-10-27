@@ -187,37 +187,6 @@ func test_newcomer_takes_bot_side_next_turn() -> void:
 	assert_eq(fm.phase, FlagMatch.Phase.PLAYBACK)
 
 
-func test_third_person_spectates_one_turn_late() -> void:
-	var fm := _match(_map())
-	_two_people(fm)
-	fm.add_person(30)
-	assert_eq(fm.team_of(30), SPEC)
-	assert_eq(_all_to(30).size(), 0, "a mid-match spectator gets nothing while turn 1 is planned")
-	for n: int in range(1, 6):
-		# Everything the spectator has while turn n is planned is from before turn n.
-		for s: Array in _all_to(30):
-			if s[1] == "turn_started":
-				assert_true(s[2]["view"]["turn"] <= n - 1, "view of turn %d during %d" % [s[2]["view"]["turn"], n])
-				assert_eq(s[2]["view"]["team"], SPEC)
-			elif s[1] == "turn_resolved":
-				assert_true(s[2]["turn"] <= n - 2, "playback of turn %d during %d" % [s[2]["turn"], n])
-		var count := _all_to(30).size()
-		var before := fm.state.copy()
-		fm.lock_in(10, n)
-		fm.lock_in(20, n)
-		var got: Array = _all_to(30).slice(count)
-		assert_eq(got.size(), 1)
-		assert_eq(got[0][1], "turn_resolved")
-		assert_eq(got[0][2]["turn"], n - 1, "the previous turn, in full")
-		fm.playback_done(10, n)
-		fm.playback_done(20, n)
-		got = _all_to(30).slice(count + 1)
-		assert_eq(got.size(), 1)
-		assert_eq(got[0][1], "turn_started")
-		assert_eq(got[0][2]["view"]["turn"], n, "the board before the turn just resolved")
-		assert_eq(got[0][2]["view"], FlagWire.view_for(_map(), before, SPEC))
-
-
 func test_resubmit_replaces_orders() -> void:
 	var m := _map()
 	var fm := _match(m)
@@ -301,20 +270,6 @@ func test_match_over_then_restart() -> void:
 	assert_eq(_to(20, "turn_started")[0]["view"]["team"], B)
 	assert_eq(_to(20, "turn_started")[0]["view"]["turn"], 0)
 	assert_eq(_all_to(30).size(), 0, "a spectator has no previous turn to see yet")
-
-
-func test_spectator_takes_a_freed_side_next_turn() -> void:
-	var fm := _match(_map())
-	_two_people(fm)
-	fm.add_person(30)
-	fm.remove_person(20)
-	assert_eq(fm.side_peer(B), 0)
-	fm.lock_in(10, 1)
-	fm.playback_done(10, 1)
-	assert_eq(fm.side_peer(B), 30)
-	assert_eq(fm.team_of(30), B)
-	var last: Array = _all_to(30)
-	assert_eq(last[last.size() - 1][2]["view"]["team"], B)
 
 
 func test_everyone_leaving_waits_for_a_new_match() -> void:

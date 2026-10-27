@@ -10,9 +10,9 @@ extends RefCounted
 ## - "turn_resolved" FlagWire.turn_for(...) ({"turn", "ticks", "events"})
 ## - "match_over"    {"result": int, "score": [red, blue]}
 ##
-## Spectators run one turn behind so they can never pass on what a player could not see:
-## at the start of turn N they get the board at the start of turn N-1, and when turn N
-## resolves they get turn N-1's full playback.
+## Spectators get the public view (FlagWire.SPECTATOR: only pieces both teams can see) and
+## run one turn behind on top of that: at the start of turn N they get the board at the
+## start of turn N-1, and when turn N resolves they get turn N-1's playback.
 
 enum Phase { WAITING, PLANNING, PLAYBACK, OVER }
 

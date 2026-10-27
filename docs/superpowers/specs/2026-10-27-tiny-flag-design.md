@@ -106,7 +106,7 @@ Files stay under ~300 lines; split further if they grow.
 | server → one peer | `turn_resolved(turn, ticks, events)` | per tick: positions of own and visible enemy pieces; witnessed events (tag, pickup, capture, drop) |
 | server → one peer | `match_over(result)` | winner or draw, final score |
 
-Spectators get `turn_resolved` with full information **one turn late**, and the full view only after the turn it describes has resolved. A spectator therefore can't pass a player positions that player couldn't see while planning.
+Spectators get the **public view**: a piece is in their rows only if both teams can see it (own pieces count as seen by their team, so in effect: the opposing team can see it), and flag carriers always. Of the events they get pickups, captures, and a tag only if both pieces are in that tick's public rows (always true for a real tag: a meeting on one tile or an orthogonal swap). On top of that they run **one turn late**: `turn_resolved` for a turn, and the view of its start, only after it has resolved. A spectator, such as a player's second browser tab, therefore never sees a piece that either team couldn't, and can't pass a player positions that player couldn't see while planning.
 
 ## 4. Testing
 

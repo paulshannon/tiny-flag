@@ -28,7 +28,7 @@ func _view(team: int, pieces: Array) -> Dictionary:
 
 func test_counts_turns_for_spectators_without_checks() -> void:
 	var t := FlagClientTally.new()
-	# Spectator rows hold every piece, far apart: no leak is counted for a spectator.
+	# Spectator rows aren't one side's view, so no leak is counted for a spectator.
 	t.on_turn(_map(), {"turn": 1, "ticks": [[[0, R, 0, 10, 0, 0], [5, B, 23, 10, 0, 0]]], "events": []})
 	assert_eq(t.turns, 1)
 	assert_eq(t.leaks, 0)
@@ -82,7 +82,7 @@ func test_forget_side_stops_checks_until_the_next_view() -> void:
 	t.on_view(_map(), _view(R, [[0, R, 5, 5, 0, 0]]))
 	t.forget_side()
 	assert_eq(t.team, FlagWire.SPECTATOR)
-	# A spectator's playback holds every piece; with the old side kept this would leak.
+	# A spectator's playback isn't Red's view; with the old side kept this would leak.
 	t.on_turn(_map(), {"turn": 1, "ticks": [[[0, R, 0, 10, 0, 0], [5, B, 23, 10, 0, 0]]], "events": []})
 	assert_eq(t.leaks, 0)
 

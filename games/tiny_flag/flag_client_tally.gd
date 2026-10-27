@@ -45,7 +45,7 @@ func on_turn(map: FlagMap, turn: Dictionary) -> void:
 		_last = now
 
 
-## Back at select: the next messages may be a spectator's (every piece), so stop
+## Back at select: the next messages may be a spectator's (the public view, checked by no side's sight), so stop
 ## checking as a side until a view says which side this is.
 func forget_side() -> void:
 	team = FlagWire.SPECTATOR

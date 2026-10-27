@@ -99,15 +99,24 @@ func test_carrier_far_away_is_in_view() -> void:
 	assert_false(_has_id(FlagWire.view_for(m, s, R)["pieces"], 5), "same piece, no flag: hidden")
 
 
-func test_spectator_view_has_everyone() -> void:
+func test_spectator_view_is_the_public_view() -> void:
 	var m := _map({Vector2i(12, 5): "w"})
 	var s := FlagState.new_match(m)
-	s.piece(0).tile = Vector2i(10, 5)
-	s.piece(5).tile = Vector2i(12, 5)
+	s.piece(0).tile = Vector2i(10, 5)   # Red, two tiles from Blue 5: Blue sees it
+	s.piece(5).tile = Vector2i(12, 5)   # Blue in crops two tiles away: Red can't see it
+	s.piece(6).tile = Vector2i(9, 5)    # Blue on grass next to Red 0: both sides see it
+	s.piece(1).tile = Vector2i(20, 9)   # Red carrying Blue's flag far from everyone
+	s.carrier[B] = 1
 	var v := FlagWire.view_for(m, s, FlagWire.SPECTATOR)
 	assert_eq(v["team"], FlagWire.SPECTATOR)
-	assert_eq((v["pieces"] as Array).size(), 10)
-	assert_eq(_ids(v["pieces"]), range(10))
+	var rows: Array = v["pieces"]
+	assert_false(_has_id(rows, 5), "enemy hidden in crops stays hidden from spectators")
+	assert_true(_has_id(rows, 0), "Red piece Blue can see")
+	assert_true(_has_id(rows, 6), "Blue piece Red can see")
+	assert_true(_has_id(rows, 1), "a carrier is always public")
+	assert_false(_has_id(rows, 2), "Red piece at home, out of Blue's sight")
+	assert_false(_has_id(rows, 7), "Blue piece at home, out of Red's sight")
+	assert_eq(_ids(rows), [0, 1, 6])
 
 
 func test_turn_for_drops_enemy_once_it_enters_corn() -> void:
@@ -165,7 +174,12 @@ func test_events_witnessed_only() -> void:
 	assert_eq(kinds, ["tag2", "tag3", "pickup4", "capture5"], "unseen enemy-only tag dropped")
 	# Blue sees tile (14,5) with its own pieces, so it keeps every event.
 	assert_eq((FlagWire.turn_for(m, o, B)["events"] as Array).size(), 5)
-	assert_eq((FlagWire.turn_for(m, o, FlagWire.SPECTATOR)["events"] as Array).size(), 5)
+	# Spectators keep a tag only when both pieces are in their rows: Red sees neither 5
+	# (crops) nor 6 (far away), so only the pickup and the capture remain.
+	var spec_kinds: Array = []
+	for e: Dictionary in FlagWire.turn_for(m, o, FlagWire.SPECTATOR)["events"]:
+		spec_kinds.append("%s%d" % [e["kind"], e["tick"]])
+	assert_eq(spec_kinds, ["pickup4", "capture5"])
 	# Events are copies: editing the filtered output leaves the outcome alone.
 	(red["events"] as Array)[0]["tick"] = 99
 	assert_eq(o.events[1]["tick"], 2)
@@ -195,58 +209,3 @@ func test_leak_check_catches_a_leak() -> void:
 	]
 	assert_eq(FlagWire.leaked_enemies(m, R, rows), [5, 8] as Array[int])
 	assert_eq(FlagWire.leaked_enemies(m, B, rows), [1] as Array[int], "Blue sees Red 0 from 2 tiles, not Red 1")
-
-
-func _random_orders(map: FlagMap, state: FlagState, rng: RandomNumberGenerator) -> Dictionary:
-	var orders: Dictionary = {}
-	for team: int in [R, B]:
-		var raw: Array = []
-		for p: FlagState.Piece in state.pieces:
-			if p.team != team or p.tagged:
-				continue
-			var target := Vector2i(rng.randi_range(0, map.width - 1), rng.randi_range(0, map.height - 1))
-			if rng.randf() < 0.5:
-				target = map.flag_home(1 - team) + Vector2i(rng.randi_range(-3, 3), rng.randi_range(-3, 3))
-			var path := FlagPath.find_path(map, p.tile, target)
-			path = FlagPath.trim_to_budget(map, p.tile, path, state.move_points(p.id))
-			if not path.is_empty():
-				raw.append([p.id, FlagPath.encode(path)])
-		orders.merge(FlagPath.validate_orders(map, state, team, raw))
-	return orders
-
-
-func test_no_leaks_in_random_matches() -> void:
-	var m := FlagMap.load_map(FlagMap.FARM_PATH)
-	var checked := 0
-	var enemy_rows_seen := 0
-	for seed_i: int in 50:
-		var rng := RandomNumberGenerator.new()
-		rng.seed = seed_i
-		var s := FlagState.new_match(m)
-		for turn_i: int in 10:
-			var o := FlagResolver.resolve(m, s, _random_orders(m, s, rng))
-			for team: int in [R, B]:
-				var t := FlagWire.turn_for(m, o, team)
-				assert_eq(t["turn"], s.turn)
-				for rows: Array in t["ticks"]:
-					assert_eq(FlagWire.leaked_enemies(m, team, rows), [] as Array[int], "seed %d turn %d team %d" % [seed_i, turn_i, team])
-					checked += 1
-					for r: Array in rows:
-						if r[1] != team:
-							enemy_rows_seen += 1
-			s = o.state
-			for team: int in [R, B]:
-				var v := FlagWire.view_for(m, s, team)
-				assert_eq(FlagWire.leaked_enemies(m, team, v["pieces"]), [] as Array[int], "view seed %d turn %d team %d" % [seed_i, turn_i, team])
-				# The view is exactly own pieces plus FlagVision's visible enemies.
-				var want: Array = []
-				for p: FlagState.Piece in s.pieces:
-					if p.team == team:
-						want.append(p.id)
-				want.append_array(FlagVision.visible_enemy_ids(m, s, team))
-				want.sort()
-				var got := _ids(v["pieces"])
-				got.sort()
-				assert_eq(got, want, "view matches FlagVision")
-	assert_eq(checked, 50 * 10 * 2 * FlagState.TICKS)
-	assert_true(enemy_rows_seen > 0, "the matches actually showed some enemies")

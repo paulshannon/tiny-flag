@@ -23,7 +23,7 @@ const MARKER := Color(1, 1, 1, 0.35)
 const CARRIED_OFFSET := Vector2(5, -6)
 
 var map: FlagMap
-## The side whose view we draw (FlagWire.SPECTATOR draws everyone, no markers).
+## The side whose view we draw (FlagWire.SPECTATOR draws the public view, no markers).
 var team: int = FlagWire.SPECTATOR
 
 var _ground: TileMapLayer

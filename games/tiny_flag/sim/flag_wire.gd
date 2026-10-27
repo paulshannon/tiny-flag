@@ -6,7 +6,9 @@ extends RefCounted
 ##
 ## Piece row: [id, team, x, y, carrying (0/1), tagged (0/1)], plain ints so it travels as is.
 
-## Team value for spectators: they get everything.
+## Team value for spectators. They get the public view: only pieces both teams can see
+## (own pieces count as seen by their team, so: pieces the opposing team can see), which
+## always includes flag carriers. A second browser tab can't beat the fog of war.
 const SPECTATOR: int = -1
 
 
@@ -59,22 +61,33 @@ static func leaked_enemies(map: FlagMap, team: int, rows: Array) -> Array[int]:
 
 static func _rows_for(map: FlagMap, state: FlagState, team: int) -> Array:
 	var shown: Array[int] = []
-	if team != SPECTATOR:
+	if team == SPECTATOR:
+		# Red's view of Blue plus Blue's view of Red: exactly what both teams can see.
+		shown = FlagVision.visible_enemy_ids(map, state, FlagMap.RED)
+		shown.append_array(FlagVision.visible_enemy_ids(map, state, FlagMap.BLUE))
+	else:
 		shown = FlagVision.visible_enemy_ids(map, state, team)
 	var rows: Array = []
 	for p: FlagState.Piece in state.pieces:
-		if team == SPECTATOR or p.team == team or shown.has(p.id):
+		if p.team == team or shown.has(p.id):
 			rows.append([p.id, p.team, p.tile.x, p.tile.y, int(state.is_carrying(p.id)), int(p.tagged)])
 	return rows
 
 
 ## Pickups and captures are always announced (flags are always visible). A tag is kept if
-## one of the pieces is the team's or its tile was visible at that tick.
+## one of the pieces is the team's or its tile was visible at that tick; for spectators,
+## if both pieces are in that tick's public rows (a real tag is a meeting on one tile or
+## an orthogonal swap, so both teams see it).
 static func _witnessed(map: FlagMap, outcome: FlagResolver.Outcome, team: int, e: Dictionary) -> bool:
-	if team == SPECTATOR or e["kind"] != "tag":
+	if e["kind"] != "tag":
 		return true
 	var tick: int = e["tick"]
 	var snap: FlagState = outcome.ticks[tick - 1]
+	if team == SPECTATOR:
+		var ids: Array[int] = []
+		for r: Array in _rows_for(map, snap, SPECTATOR):
+			ids.append(r[0])
+		return ids.has(e["piece"]) and ids.has(e["by"])
 	var victim := snap.piece(e["piece"])
 	var tagger := snap.piece(e["by"])
 	if victim.team == team or tagger.team == team:
