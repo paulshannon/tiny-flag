@@ -11,9 +11,10 @@ Each release's section becomes the notes of its GitHub Release (`tools/release_n
 - Kenney interface packs (CC0): Input Prompts, Mobile Controls, UI Pack, Interface Sounds, Emotes, Cursor Pack, under `assets/kenney/`.
 - Kenney pixel-art packs (CC0): Tiny Battle, Tiny City, Tiny Dungeon, Tiny Factory, Tiny Farm, Tiny Ski, Tiny Town, under `assets/kenney/`. The default 2D texture filter is now Nearest so they stay crisp.
 - **Tiny Flag**, a turn-based two-team capture the flag game (`games/tiny_flag/`), now the default game (`?game=flag`, port 9082). It plays over the network with headless bot clients: simultaneous planning, lockstep playback, fog of war enforced by the server, bots on empty sides, spectators one turn behind. It's playable in the browser with mouse or touch: a Kenney farm board (Tiny Farm terrain, Tiny Battle soldiers and flags), click or tap to plan paths with their cost, Lock in, an animated playback with event messages, faded last-seen markers for enemies out of sight, score and countdown, and a start menu with Play and Controls. Deploy files (`/ws/flag` in both Caddyfiles, a `game-flag` compose service, `kenney-mp@flag`) and CI's restart smoke cover it.
+- Tiny Flag's HUD and menu are themed with the Kenney UI Pack: its buttons (Blue, a green Lock in, a yellow Clear path with the pack's cross), light panels behind the HUD text, a team-coloured "You" tag and result banner, and the Kenney Future font. The Clear path button's ✕ used to draw as a missing-glyph box in the browser.
 
 ### Changed
-- The web build is ~2.4 MB of game data instead of ~17.7 MB: both export presets leave out the Kenney packs Tiny Flag doesn't load (Cursor, Emotes, Input Prompts, Interface Sounds, Mobile Controls, Tiny City/Dungeon/Factory/Ski/Town). Tiny Farm, Tiny Battle and the UI Pack (for the coming HUD theme) are still exported.
+- The web build is ~2.4 MB of game data instead of ~17.7 MB: both export presets leave out the Kenney packs Tiny Flag doesn't load (Cursor, Emotes, Input Prompts, Interface Sounds, Mobile Controls, Tiny City/Dungeon/Factory/Ski/Town). Tiny Farm, Tiny Battle and the UI Pack (the HUD and menu theme) are still exported.
 - `GameBase.touch_stick()` is now in the starter too (paulshannon/game-starter `b206f8a`, which includes this repo's `if stick_enabled:` cleanup of the stick drawing).
 
 ### Removed

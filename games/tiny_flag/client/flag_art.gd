@@ -45,6 +45,29 @@ const BUILDING_RIGHT: int = 128  # barn wall with window
 const SOLDIER: Array[int] = [160, 142]
 const FLAG: Array[int] = [70, 52]
 
+# --- UI Pack: HUD and menu (FlagUi builds the theme from these) -----------------
+const UI_DIR: String = "res://assets/kenney/ui-pack/"
+const UI_FONT: String = UI_DIR + "Font/Kenney Future.ttf"
+## Colour folders under PNG/ (Default size, 192x64 rectangles and 64x64 squares).
+const UI_BLUE: String = "Blue"
+const UI_GREEN: String = "Green"
+const UI_GREY: String = "Grey"
+const UI_RED: String = "Red"
+const UI_YELLOW: String = "Yellow"
+const UI_COLOURS: Array[String] = [UI_BLUE, UI_GREEN, UI_GREY, UI_RED, UI_YELLOW]
+## Raised button (4 px darker base under the face), the same lit from above (hover),
+## and the flat one with no base (pressed).
+const UI_BUTTON_UP: String = "button_rectangle_depth_flat.png"
+const UI_BUTTON_HOVER: String = "button_rectangle_depth_gradient.png"
+const UI_BUTTON_DOWN: String = "button_rectangle_flat.png"
+## Square tile for panels, tags and banners; 9-sliced.
+const UI_PANEL: String = "button_square_flat.png"
+const UI_PANEL_RAISED: String = "button_square_depth_flat.png"
+## 18x18 cross, the Clear path button's icon (the pack font has no "✕").
+const UI_ICON_CROSS: String = "icon_cross.png"
+const UI_FILES: Array[String] = [UI_BUTTON_UP, UI_BUTTON_HOVER, UI_BUTTON_DOWN, UI_PANEL, UI_PANEL_RAISED,
+		UI_ICON_CROSS]
+
 ## Team colours for overlays (bases, paths, HUD).
 const TEAM_COLOR: Array[Color] = [Color(0.86, 0.25, 0.22), Color(0.2, 0.45, 0.9)]
 const TEAM_NAME: Array[String] = ["Red", "Blue"]
@@ -52,6 +75,20 @@ const TEAM_NAME: Array[String] = ["Red", "Blue"]
 
 static func coords(index: int, columns: int) -> Vector2i:
 	return Vector2i(index % columns, index / columns)
+
+
+## A UI Pack PNG: `colour` is one of UI_COLOURS, `file` one of UI_FILES.
+static func ui_png(colour: String, file: String) -> String:
+	return UI_DIR + "PNG/" + colour + "/Default/" + file
+
+
+## Every UI Pack file FlagUi can load.
+static func ui_paths() -> Array[String]:
+	var paths: Array[String] = [UI_FONT]
+	for c: String in UI_COLOURS:
+		for f: String in UI_FILES:
+			paths.append(ui_png(c, f))
+	return paths
 
 
 static func farm_sheet() -> Texture2D:
