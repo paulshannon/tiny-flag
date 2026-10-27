@@ -94,7 +94,7 @@ func test_attacker_flees_nearby_enemy() -> void:
 func test_bot_vs_bot_finishes() -> void:
 	var r := _play(1, 2)
 	var s: FlagState = r["state"]
-	assert_true(s.turn <= FlagState.TURN_LIMIT, "ends by turn 40")
+	assert_true(s.turn <= FlagState.TURN_LIMIT, "ends by the turn limit")
 	assert_true(s.result() != FlagState.Result.ONGOING, "has result")
 	assert_true(r["tags"] >= 1, "at least one tag")
 	assert_true(r["pickups"] >= 1, "at least one pickup")

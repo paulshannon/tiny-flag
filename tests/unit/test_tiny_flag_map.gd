@@ -25,9 +25,9 @@ func test_rejects_bad_maps() -> void:
 		assert_eq(FlagMap.parse(bad), null, bad)
 
 
-func test_farm_is_32_by_18_and_symmetric() -> void:
+func test_farm_is_64_by_36_and_symmetric() -> void:
 	var m := FlagMap.load_map(FlagMap.FARM_PATH)
-	assert_eq(m.width, 32); assert_eq(m.height, 18)
+	assert_eq(m.width, 64); assert_eq(m.height, 36)
 	for y: int in m.height:
 		for x: int in m.width:
 			var here: FlagMap.Terrain = m.terrain(Vector2i(x, y))
@@ -55,12 +55,12 @@ func test_farm_middle_third_has_crops_and_trees() -> void:
 	var crops := 0
 	var trees := 0
 	for y: int in m.height:
-		for x: int in range(11, 21):
+		for x: int in range(m.width / 3, m.width - m.width / 3):
 			match m.terrain(Vector2i(x, y)):
 				FlagMap.Terrain.CROPS: crops += 1
 				FlagMap.Terrain.TREE: trees += 1
-	assert_true(crops >= 12, "crops %d" % crops)
-	assert_true(trees >= 4, "trees %d" % trees)
+	assert_true(crops >= 48, "crops %d" % crops)
+	assert_true(trees >= 8, "trees %d" % trees)
 
 
 ## BFS over passable tiles, ignoring `blocked`. Returns the tiles from start to goal, or [].
