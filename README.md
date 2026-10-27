@@ -1,6 +1,6 @@
 # Tiny Flag (Godot 4.7)
 
-A multiplayer browser game in Godot 4.7, built with [Kenney](https://kenney.nl) assets and developed with Claude Code. The game design is still being decided; for now the repo runs the starter's two skeletons (a 2D arena and a 3D arena) on one server-authoritative networking layer.
+A multiplayer browser game in Godot 4.7, built with [Kenney](https://kenney.nl) assets and developed with Claude Code. Tiny Flag is turn-based two-team capture the flag on a Kenney farm board (see `games/tiny_flag/README.md`), on one server-authoritative networking layer.
 
 - **Browser-first:** single-threaded web export on the Compatibility (WebGL 2) renderer. Works on any static host, Safari included.
 - **Server-authoritative:** clients send input; a headless dedicated server simulates and replicates state; clients interpolate.
@@ -20,10 +20,10 @@ tools/verify.sh                      # compile + unit tests + multiplayer smoke 
 Play locally with native windows (fastest loop):
 
 ```bash
-tools/run_server.sh                  # terminal 1  (2d; or 3d)
+tools/run_server.sh                  # terminal 1  (Tiny Flag, the default game)
 tools/run_client.sh                  # terminal 2
 tools/run_client.sh                  # terminal 3 — a second player
-tools/run_client.sh 2d "" --bot      # or a bot player
+tools/run_client.sh flag "" --bot    # or a bot player
 ```
 
 Play in the browser:
@@ -34,13 +34,13 @@ tools/run_server.sh                  # terminal 1
 tools/serve_web.sh                   # terminal 2 → open http://localhost:8000/
 ```
 
-Open the page in two tabs to see two players. The 2D arena is the default game (no `--game` / `?game=`); the 3D one is `3d` / `?game=3d`. WASD / arrows, Space to jump (3D); on a touch screen, drag on the left half to move (floating stick) and tap **Jump** bottom-right (3D).
+Open the page in two tabs to play Red against Blue (a side nobody plays is the server's bot). Tiny Flag is the default and only game (`--game=flag` / `?game=flag`). Click a soldier, click tiles to plan its path, then **Lock in**; on a touch screen, tap a soldier, tap a tile to preview and tap it again to confirm (there is no movement stick). Controls are in `games/tiny_flag/README.md`.
 
 Use the editor normally too: `.tools/godot -e --path .` (or your own Godot 4.7.1). To run server + clients from the editor, set *Debug → Customize Run Instances* with `-- --server` for one instance and `-- --client` for the others.
 
 ## Adding the game
 
-Follow *Workflow for a new prototype* in `CLAUDE.md` §7: copy a `games/box_arena_*` folder to `games/tiny_flag/`, add it to `main.gd::_make_game` and `Protocol.PORTS`, and set `Protocol.DEFAULT_GAME`. Delete the box arenas once they're not needed (also from `main.gd`, `Protocol.PORTS`, `tools/smoke.sh`'s `all` list and `deploy/`).
+Tiny Flag was started from the starter's box-arena skeletons, which have since been removed here; to start another game, copy a `games/box_arena_*` folder from [paulshannon/game-starter](https://github.com/paulshannon/game-starter) and follow *Workflow for a new prototype* in `CLAUDE.md` §7 (`main.gd::_make_game`, `Protocol.PORTS`, `tools/smoke.sh`'s `all` list, `deploy/`).
 
 Keep game code in `games/<name>/` (and its tests in `tests/unit/test_<name>_*.gd`). Anything another game could use goes in `common/`, `client/`, `tests/` (the runner) or `tools/`, and is ported back to the starter in its own PR. Starter changes come in by merging or copying them; note the starter commit in the commit message.
 
@@ -51,7 +51,7 @@ tools/add_kenney_pack.sh ~/Downloads/kenney_mini-characters.zip    # → assets/
 tools/kenney_atlas.sh assets/kenney/<2d-pack>                     # 2D only: spritesheet XML → .tres
 ```
 
-Then set `MODEL_PATH` in `games/box_arena_3d/player_3d.gd` or `SPRITE_PATH` in `games/box_arena_2d/player_2d.gd`. The installer keeps the pack's folder structure and License, removes the duplicate FBX/OBJ folders, imports, and records the pack in `CREDITS.md`.
+Then load the art from the game's own code (Tiny Flag's tiles and pieces come from `games/tiny_flag/`). The installer keeps the pack's folder structure and License, removes the duplicate FBX/OBJ folders, imports, and records the pack in `CREDITS.md`.
 
 ## Layout
 
@@ -59,11 +59,10 @@ Then set `MODEL_PATH` in `games/box_arena_3d/player_3d.gd` or `SPRITE_PATH` in `
 main.gd / main.tscn      entry point: reads launch config, loads game, hosts or joins
 common/net/              transport (Net autoload), protocol constants, launch config,
                          input relay, replication helper
-common/sim/              pure movement rules (ArenaSim) — server-run, unit-tested
+common/sim/              ArenaSim: input sanitizing used by InputRelay — unit-tested
 common/game/             GameBase: spawning, despawning, smoke-test reporting
 client/                  interpolation buffer, input actions, HUD
 games/tiny_flag/         Tiny Flag, turn-based capture the flag (games/tiny_flag/README.md)
-games/box_arena_2d|3d/   the two starter skeletons
 tests/                   tiny test runner + unit tests
 tools/                   every command (install, check, test, smoke, export, serve, Kenney)
 deploy/                  Caddy (HTTPS + wss) and systemd for a single VPS

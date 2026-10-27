@@ -1,6 +1,6 @@
 #!/bin/sh
 # Container entrypoint: one game server per container.
-#   GAME  flag | 2d | 3d   (default 2d)
+#   GAME  flag   (unset or empty: the server's Protocol.DEFAULT_GAME)
 #   PORT  listen port inside the container (default 9080, whatever the game;
 #         map it to anything on the host)
 # Extra arguments are passed to the server after its own, e.g.
@@ -10,8 +10,11 @@
 # the server itself would ignore SIGTERM, so `docker stop` would wait out its
 # timeout and SIGKILL it. (Same job as tini, without installing anything.)
 set -eu
+if [ -n "${GAME:-}" ]; then
+	set -- --game="$GAME" "$@"
+fi
 /app/server.x86_64 --headless -- --server \
-	--game="${GAME:-2d}" --port="${PORT:-9080}" --bind=0.0.0.0 "$@" &
+	--port="${PORT:-9080}" --bind=0.0.0.0 "$@" &
 pid=$!
 trap 'kill -TERM "$pid" 2>/dev/null' TERM INT
 # The first wait returns early when a trapped signal arrives; wait again for

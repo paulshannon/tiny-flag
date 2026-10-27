@@ -5,12 +5,12 @@
 #   - no ERROR / SCRIPT ERROR lines appear in any log, apart from the
 #     documented benign ones in tools/smoke_allowlist.txt
 #
-# Usage: tools/smoke.sh [2d|3d|flag|all] [seconds=8] [clients=2]
+# Usage: tools/smoke.sh [flag|all] [seconds=8] [clients=2]
 #        SERVER_BIN=build/server/server.x86_64 tools/smoke.sh   # test the export
 #        SERVER_IMAGE=game-server:ci tools/smoke.sh   # test the Docker image
 #            (deploy/docker/Dockerfile; the container's 9080 is published on
 #            127.0.0.1:<the game's Protocol port>, so clients are unchanged)
-#        SMOKE_RESTART=1 tools/smoke.sh 2d   # kill + restart the server mid-run;
+#        SMOKE_RESTART=1 tools/smoke.sh flag   # kill + restart the server mid-run;
 #            bots must reconnect and play on (each reports "reconnects":1)
 # Logs:  .smoke/<game>/{server,client1,...}.log  (restart: .smoke/<game>-restart/)
 source "$(dirname "$0")/_godot.sh"
@@ -117,8 +117,6 @@ run=run_one
 [[ -n "${SMOKE_RESTART:-}" ]] && run=run_restart
 status=0
 if [[ "$GAME" == "all" ]]; then
-  $run 2d || status=1
-  $run 3d || status=1
   $run flag || status=1
 else
   $run "$GAME" || status=1

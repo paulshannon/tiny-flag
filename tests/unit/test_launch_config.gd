@@ -10,9 +10,9 @@ func test_defaults_to_default_game_client_localhost() -> void:
 
 
 func test_server_args() -> void:
-	var c: LaunchConfig = LaunchConfig.from_args(PackedStringArray(["--server", "--game=3d", "--port=7000", "--run-seconds=5", "--expect-peers=2"]))
+	var c: LaunchConfig = LaunchConfig.from_args(PackedStringArray(["--server", "--game=flag", "--port=7000", "--run-seconds=5", "--expect-peers=2"]))
 	assert_true(c.is_server)
-	assert_eq(c.game, "3d")
+	assert_eq(c.game, "flag")
 	assert_eq(c.port, 7000)
 	assert_near(c.run_seconds, 5.0)
 	assert_eq(c.expect_peers, 2)
@@ -29,8 +29,8 @@ func test_unknown_game_falls_back() -> void:
 
 
 func test_web_https_uses_wss_proxy_path() -> void:
-	var c: LaunchConfig = LaunchConfig.from_web_location("https:", "play.example.com", "play.example.com", "?game=3d")
-	assert_eq(c.url, "wss://play.example.com/ws/3d")
+	var c: LaunchConfig = LaunchConfig.from_web_location("https:", "play.example.com", "play.example.com", "?game=flag")
+	assert_eq(c.url, "wss://play.example.com/ws/flag")
 
 
 func test_web_http_uses_direct_port() -> void:

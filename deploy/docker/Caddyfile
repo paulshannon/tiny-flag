@@ -8,12 +8,6 @@
 	encode zstd gzip   # the .wasm is ~40 MB raw and compresses ~4x
 	# WebSocket game servers. handle_path strips the prefix before proxying;
 	# Caddy proxies WebSocket upgrades with no extra config.
-	handle_path /ws/2d* {
-		reverse_proxy game-2d:9080
-	}
-	handle_path /ws/3d* {
-		reverse_proxy game-3d:9080
-	}
 	handle_path /ws/flag* {
 		reverse_proxy game-flag:9080
 	}

@@ -3,9 +3,9 @@ extends RefCounted
 ## Decides role, game and server address from the command line (native) or
 ## the page URL (web). Parsing is pure so it can be unit-tested.
 ##
-## Native:  godot --path . -- --server --game=3d --port=9081 [--bind=127.0.0.1]
-##          godot --path . -- --client --game=3d --url=ws://127.0.0.1:9081 --bot
-## Web:     index.html?game=3d&server=wss://example.com/ws/3d
+## Native:  godot --path . -- --server --game=flag --port=9082 [--bind=127.0.0.1]
+##          godot --path . -- --client --game=flag --url=ws://127.0.0.1:9082 --bot
+## Web:     index.html?game=flag&server=wss://example.com/ws/flag
 
 var is_server: bool = false
 var game: String = Protocol.DEFAULT_GAME
@@ -62,7 +62,7 @@ static func from_args(args: PackedStringArray) -> LaunchConfig:
 
 
 ## protocol: "https:"   host: "game.example.com:8443"   hostname: "game.example.com"
-## search: "?game=3d&server=wss://..."
+## search: "?game=flag&server=wss://..."
 static func from_web_location(protocol: String, host: String, hostname: String, search: String) -> LaunchConfig:
 	var cfg := LaunchConfig.new()
 	var query: Dictionary = parse_query(search)

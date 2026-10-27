@@ -18,20 +18,6 @@ x-game: &game
   restart: unless-stopped
 
 services:
-  game-2d:
-    <<: *game
-    environment:
-      GAME: 2d
-    volumes:
-      - game-2d-data:/data
-
-  game-3d:
-    <<: *game
-    environment:
-      GAME: 3d
-    volumes:
-      - game-3d-data:/data
-
   game-flag:
     <<: *game
     environment:
@@ -42,7 +28,7 @@ services:
   caddy:
     image: caddy:2
     restart: unless-stopped
-    depends_on: [game-2d, game-3d, game-flag]
+    depends_on: [game-flag]
     environment:
       DOMAIN: ${DOMAIN:?set DOMAIN, e.g. play.example.com (or :80 for a local HTTP test)}
     ports:
@@ -56,8 +42,6 @@ services:
       - caddy-config:/config
 
 volumes:
-  game-2d-data:
-  game-3d-data:
   game-flag-data:
   caddy-data:
   caddy-config:

@@ -9,8 +9,6 @@ const DEFAULT_GAME: String = "flag"
 ## One port per game so a single VPS can run every prototype side by side.
 const PORTS: Dictionary = {   # in menu order (tools/make_site.sh lists them so)
 	"flag": 9082,
-	"2d": 9080,
-	"3d": 9081,
 }
 
 ## Server simulation runs on the physics tick (project setting: 60 Hz).

@@ -37,14 +37,10 @@ func _add_game() -> void:
 	add_child(_game)
 
 
-func _make_game(game: String) -> GameBase:
-	match game:
-		"3d":
-			return Arena3D.new()
-		"flag":
-			return TinyFlagGame.new()
-		_:
-			return Arena2D.new()
+## One game per name in Protocol.PORTS; LaunchConfig already maps unknown
+## names to Protocol.DEFAULT_GAME. This repo has just the one.
+func _make_game(_game_name: String) -> GameBase:
+	return TinyFlagGame.new()
 
 
 func _start_server() -> void:

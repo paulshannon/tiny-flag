@@ -10,12 +10,6 @@ play.example.com {
 
 	# WebSocket game servers. handle_path strips the prefix before proxying.
 	# Caddy proxies WebSocket upgrades with no extra config.
-	handle_path /ws/2d* {
-		reverse_proxy 127.0.0.1:9080
-	}
-	handle_path /ws/3d* {
-		reverse_proxy 127.0.0.1:9081
-	}
 	handle_path /ws/flag* {
 		reverse_proxy 127.0.0.1:9082
 	}

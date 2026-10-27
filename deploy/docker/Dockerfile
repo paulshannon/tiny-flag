@@ -4,7 +4,7 @@
 #
 #   tools/export.sh server
 #   docker build -f deploy/docker/Dockerfile -t game-server .
-#   docker run --rm -p 9080:9080 -e GAME=2d game-server
+#   docker run --rm -p 9080:9080 -e GAME=flag game-server
 #
 # The build context is the repo root, but .dockerignore admits only the
 # server binary and this folder.
@@ -16,7 +16,7 @@ FROM debian:bookworm-slim
 RUN useradd --system --uid 10001 --user-group --home-dir /data --create-home \
 	--shell /usr/sbin/nologin game
 ENV HOME=/data \
-	GAME=2d \
+	GAME=flag \
 	PORT=9080
 VOLUME /data
 
@@ -37,7 +37,7 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 ARG VERSION=dev
 ARG REVISION=unknown
 LABEL org.opencontainers.image.title="game-server" \
-	org.opencontainers.image.description="Headless Godot 4.7 dedicated server for the Kenney multiplayer prototypes (GAME=flag|2d|3d)" \
+	org.opencontainers.image.description="Headless Godot 4.7 dedicated server for the Kenney multiplayer prototypes (GAME=flag)" \
 	org.opencontainers.image.source="https://github.com/paulshannon/game-starter" \
 	org.opencontainers.image.version="$VERSION" \
 	org.opencontainers.image.revision="$REVISION"

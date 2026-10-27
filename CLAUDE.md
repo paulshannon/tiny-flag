@@ -34,7 +34,7 @@ export_presets.cfg         "Web" (single-threaded) + "Linux Server" (dedicated_s
 common/
   net/                     Net autoload, Protocol constants, LaunchConfig, InputRelay,
                            BotInput, Replication (synchronizer builder)
-  sim/arena_sim.gd         pure movement rules — no nodes; server-run, unit-tested
+  sim/arena_sim.gd         pure movement rules — no nodes; InputRelay uses its sanitize_move
   game/game_base.gd        spawner, peer join/leave, smoke reporting — base for every game
   game/player_net.gd       PlayerNet: relay + synchronizer + interpolation every player uses
   game/player_slots.gd     PlayerSlots: reusable seats (match-full check, spawn index)
@@ -44,7 +44,8 @@ client/                    SnapshotBuffer/SnapshotClock (interpolation), StateTi
                            InputBindings (remap + save), ControlsEditor (settings page),
                            TouchControls + TouchStick (on-screen stick + action button), Hud, GameMenu
 games/<name>/              one folder per prototype + README.md (core loop, players, packs):
-                           box_arena_2d, box_arena_3d (skeletons to copy for a new game)
+                           tiny_flag (this repo's game; the box_arena_2d/3d skeletons to copy
+                           for a new game live in paulshannon/game-starter)
 assets/kenney/<pack>/      whole packs, original structure, License kept
 assets/own/                anything we made or modified
 tests/                     run_tests.tscn + TestCase + ErrorCapture + unit/test_*.gd;
@@ -79,11 +80,9 @@ Turns `<TextureAtlas>`/`<SubTexture>` XML into one `AtlasTexture` `.tres` per sp
 - Pixel-art packs: set Project Settings → Rendering → Textures → Default Texture Filter = **Nearest**.
 
 ### Using art
-Players are built in code, so swapping art is one constant:
-- 3D: `BoxPlayer3D.MODEL_PATH` (+ `MODEL_SCALE`) → a `.glb`
-- 2D: `BoxPlayer2D.SPRITE_PATH` → a texture or generated `.tres`
+Players and boards are built in code, so swapping art means changing a few constants. Here, `games/tiny_flag/client/flag_art.gd` (`FlagArt`) is the only file that names Kenney paths (sheets and tile indices). The starter's box-arena skeletons (`paulshannon/game-starter`) show the one-constant swap for a moving player (`BoxPlayer3D.MODEL_PATH` → a `.glb`, `BoxPlayer2D.SPRITE_PATH` → a texture or `.tres`).
 
-The model/sprite is a child of `Body` and is **purely visual**: collision and movement stay in `ArenaSim`. For props and levels, wrap each model in our own scene (our root + script + collision, Kenney model instanced untouched); never edit imported Kenney files, because reimport regenerates them.
+Art is **purely visual**: collision, movement and game rules stay in the sim (`common/sim`, `games/tiny_flag/sim/`). For props and levels, wrap each model in our own scene (our root + script + collision, Kenney model instanced untouched); never edit imported Kenney files, because reimport regenerates them.
 
 ### Collision
 Kenney models carry no `-col` hints. In order of preference: primitive shapes in our wrapper (cheapest, most stable for networking) → convex per-mesh physics on import for dynamic props → trimesh only for static level geometry.
@@ -101,7 +100,7 @@ Clients send **input**. The server simulates and replicates **state**. Clients r
 ### How a frame flows (read these files in order)
 1. `client/input/input_setup.gd` — actions defined in code (the `[input]` section of `project.godot` is serialized objects; easy to corrupt by hand). On touch screens `client/input/touch_controls.gd` presses the **same actions** with analog strength (floating stick on the left half, an action button bottom-right for the game's `GameBase.action_button()`, e.g. Jump or Fire; a game that reads taps on the board returns false from `GameBase.touch_stick()` to drop the stick), so nothing downstream knows touch exists. Never add a touch-only input path to the protocol. Default bindings (two keys + two controller inputs per action) are in `InputSetup.default_bindings`; players remap them on a menu's Controls page (`ControlsEditor`), and `InputBindings` rewrites the InputMap and saves to `user://controls.cfg`, loaded by `main.gd` for people (not bots). `InputSetup.MENU` (Esc, Start, touch Menu button) is client-only: `main.gd` sends the player back to select (`GameBase.leave_to_select()`: the server despawns them and keeps the seat; Play re-sends the join request).
 2. `common/net/input_relay.gd` — on the owning client, sends `submit_input(move, jump, fire, strafe, seq)` to the server at `Protocol.INPUT_HZ`. Only the game's own button (`GameBase.action_button()`) is ever sent as pressed, and a key still held when the player spawns (Space on the menu's Play button) counts as up until it's released. On the server, validates sender == owner, drops stale `seq`, sanitizes. Input older than `Protocol.INPUT_TIMEOUT` (250 ms) counts as released, so a backgrounded tab or stalled network can't hold a key down forever.
-3. `games/*/player_*.gd` `_physics_process` (server only) — `ArenaSim.step_*` → writes `net_time` (server clock) + `net_position` / `net_rotation`.
+3. A real-time game's `games/*/player_*.gd` `_physics_process` (server only; the starter's box arenas are the example — Tiny Flag is turn-based and doesn't use this loop, see `games/tiny_flag/README.md`) — `ArenaSim.step_*` → writes `net_time` (server clock) + `net_position` / `net_rotation`.
 4. `common/net/replication.gd` — a `MultiplayerSynchronizer` sends those at `Protocol.SNAPSHOT_HZ` (20 Hz). Authority stays with the server.
 5. Player property setters (client) push each snapshot into a `SnapshotBuffer` **stamped with `net_time`, not arrival time**, and `SnapshotClock` maps server time onto the local clock. `_process` draws at server time `now - latency - Protocol.INTERP_DELAY` (100 ms ≈ 2 snapshots). Stamping by arrival time would squash a burst of snapshots that queued up behind a TCP stall into ~0 s and the player would teleport. `net_time` must stay **first** in the synchronizer's property list: properties are applied in list order, so it's set before the values it stamps. Stalls up to `INTERP_DELAY − snapshot interval − latency` (~20–50 ms) are invisible; longer ones pause, then catch up by the excess. The clock slews slowly toward lower latency, except when it is more than `SnapshotClock.SNAP_BEHIND` behind: then it jumps (a client that stalled loading art while the first snapshots arrived would otherwise draw seconds late for a long time).
 
@@ -137,7 +136,7 @@ For true unreliable transport (fast shooters) or peer-to-peer. Needs a WebSocket
 
 - Presets live in `export_presets.cfg`: **Web** (thread support off, desktop + mobile VRAM compression) and **Linux Server** (`dedicated_server=true`, strips visuals, embedded pck). Tests, tools and deploy files are excluded from exports.
 - Web clients wait for a **click to join**: browsers only allow audio after a user gesture.
-- The page picks its server from the URL (`LaunchConfig.from_web_location`): `?game=flag|2d|3d` (default `Protocol.DEFAULT_GAME`, flag), optional `&server=wss://...`. On HTTPS the default is `wss://<same host>/ws/<game>` — what `deploy/Caddyfile` serves. On plain HTTP (local dev) it's `ws://<hostname>:<game port>`.
+- The page picks its server from the URL (`LaunchConfig.from_web_location`): `?game=flag` (default `Protocol.DEFAULT_GAME`, flag; one name per `Protocol.PORTS` entry), optional `&server=wss://...`. On HTTPS the default is `wss://<same host>/ws/<game>` — what `deploy/Caddyfile` serves. On plain HTTP (local dev) it's `ws://<hostname>:<game port>`.
 - **HTTPS pages can only open `wss://`**; the Godot server speaks `ws://`, so production terminates TLS in Caddy and runs servers with `--bind=127.0.0.1`.
 - Compatibility renderer budget: one directional light, no SDFGI/volumetric fog/SSR, `MultiMeshInstance3D` for repeated props, low-poly Kenney kits.
 - Test in Chrome **and** Safari before calling a web change done; Safari usually breaks first.
@@ -164,13 +163,13 @@ For true unreliable transport (fast shooters) or peer-to-peer. Needs a WebSocket
 | `tools/install_godot.sh [--templates]` | pinned Godot (+ Web/Linux templates) into `.tools/` |
 | `tools/check.sh` | import, then compile **every** `.gd` with autoloads loaded |
 | `tools/test.sh` | unit tests in `tests/unit/` |
-| `tools/smoke.sh [2d\|3d\|all] [secs] [clients]` | headless server + N bot clients over real WebSockets; logs in `.smoke/` |
-| `SMOKE_RESTART=1 tools/smoke.sh 2d` | kills and restarts the server mid-run; bots must rejoin and play on |
-| `tools/verify.sh` | check → test → smoke 2D+3D → restart smoke 2D. **Definition of done.** |
+| `tools/smoke.sh [flag\|all] [secs] [clients]` | headless server + N bot clients over real WebSockets; logs in `.smoke/` |
+| `SMOKE_RESTART=1 tools/smoke.sh flag` | kills and restarts the server mid-run; bots must rejoin and play on |
+| `tools/verify.sh` | check → test → smoke all (flag) → restart smoke flag. **Definition of done.** |
 | `tools/export.sh [web\|server\|all]` | builds into `build/` |
 | `SERVER_BIN=build/server/server.x86_64 tools/smoke.sh` | smoke-test the exported server (what production runs) |
 | `SERVER_IMAGE=game-server:dev tools/smoke.sh` | smoke-test the Docker image (`docker build -f deploy/docker/Dockerfile -t game-server:dev .` after exporting the server) |
-| `tools/run_server.sh 2d` / `tools/run_client.sh 2d [url] [--bot]` | manual play |
+| `tools/run_server.sh [game]` / `tools/run_client.sh [game] [url] [--bot]` (game defaults to `Protocol.DEFAULT_GAME`) | manual play |
 | `tools/serve_web.sh` | serve `build/web` on :8000 |
 | `tools/add_kenney_pack.sh`, `tools/kenney_atlas.sh` | Kenney import (§3) |
 
@@ -188,7 +187,7 @@ Tools find Godot via `$GODOT`, then `.tools/godot`, then `godot` on PATH, and wa
 - **Server logs `ready_state != STATE_OPEN` when it sends into a socket a client is closing.** Every closed browser tab does this; it's the one entry in `tools/smoke_allowlist.txt`. Anything else in a smoke log is a real failure. Add allowlist entries only with a written reason.
 
 ### Editing scenes and resources
-- Prefer building nodes in code (as the players and arenas do). For `.tscn`/`.tres`, make small edits; when adding an `[ext_resource]`, give it a unique `id` and let Godot add the `uid` on the next import rather than inventing one.
+- Prefer building nodes in code (as Tiny Flag's board and HUD do). For `.tscn`/`.tres`, make small edits; when adding an `[ext_resource]`, give it a unique `id` and let Godot add the `uid` on the next import rather than inventing one.
 - Never edit `.import` files or anything in `.godot/`.
 - After adding assets or scenes, run `tools/check.sh` (it imports first).
 
@@ -201,7 +200,7 @@ Tools find Godot via `$GODOT`, then `.tools/godot`, then `godot` on PATH, and wa
 - If the tests outgrow `TestCase`, add GUT or gdUnit4 under `addons/` and port them.
 
 ### Workflow for a new prototype
-1. Copy a `games/box_arena_*` folder, rename classes, add a branch in `main.gd::_make_game` and a port in `Protocol.PORTS` (then the game in `tools/smoke.sh`'s `all` list, a `/ws/<game>` route in `deploy/Caddyfile` and the instance in `deploy/`). Write the game's `README.md` (core loop, players, 2D/3D, Kenney packs).
+1. Copy a `games/box_arena_*` folder from `paulshannon/game-starter` (removed from this repo once Tiny Flag stood on its own), rename classes, add a branch in `main.gd::_make_game` and a port in `Protocol.PORTS` (then the game in `tools/smoke.sh`'s `all` list, a `/ws/<game>` route in `deploy/Caddyfile` and the instance in `deploy/`). Write the game's `README.md` (core loop, players, 2D/3D, Kenney packs).
    - A start menu: subclass `GameMenu` (`client/ui/game_menu.gd`) and return it from `GameBase.make_menu()`. `main.gd` shows it at startup instead of the join button and again after a lost connection (with "Rejoin"/"Try again"); bots skip it. `games/space/` in `paulshannon/game` is the example, themed from a Kenney UI pack in code (`SpaceUi`).
    - Controls created in code and anchored in `_ready()` (already in the tree) need `set_anchors_and_offsets_preset()`: plain `set_anchors_preset()` keeps the current size, which is zero.
 2. Get the core mechanic working with boxes, server-side, with unit tests for the rules in `common/sim` (or a game-specific sim file).
@@ -229,7 +228,7 @@ An MCP server (e.g. `Coding-Solo/godot-mcp`) can launch the editor and read debu
 
 ## 8. Deployment
 
-See `deploy/README.md`. Short version: static web build behind Caddy (automatic HTTPS), one systemd service per game (`kenney-mp@2d`, `kenney-mp@3d`, one per game) bound to 127.0.0.1, Caddy proxying `/ws/<game>` as `wss://`. Smoke-test the exported server binary before shipping it. CI (`.github/workflows/ci.yml`) runs verify + export + exported-server smoke on pushes to `main`/`develop`/`release/*`/`hotfix/*` and on every PR. Tagged releases (`release.yml`) attach the web build and server binary to a GitHub Release, push the server image to `ghcr.io/<owner>/game-server`, and publish the web build to GitHub Pages (`tools/make_site.sh`; game server from the `GAME_SERVER_URL` repo variable). Docker alternative to systemd: `deploy/docker-compose.yml` (game containers behind Caddy).
+See `deploy/README.md`. Short version: static web build behind Caddy (automatic HTTPS), one systemd service per game (`kenney-mp@flag`, one per game) bound to 127.0.0.1, Caddy proxying `/ws/<game>` as `wss://`. Smoke-test the exported server binary before shipping it. CI (`.github/workflows/ci.yml`) runs verify + export + exported-server smoke on pushes to `main`/`develop`/`release/*`/`hotfix/*` and on every PR. Tagged releases (`release.yml`) attach the web build and server binary to a GitHub Release, push the server image to `ghcr.io/<owner>/game-server`, and publish the web build to GitHub Pages (`tools/make_site.sh`; game server from the `GAME_SERVER_URL` repo variable). Docker alternative to systemd: `deploy/docker-compose.yml` (game containers behind Caddy).
 - **Docker image:** never re-export inside the Dockerfile; it wraps the binary CI already exported and smoke-tested. The server as PID 1 ignores SIGTERM, so `deploy/docker/entrypoint.sh` forwards it (keep that, or `docker stop` waits 10 s and SIGKILLs). `run/flush_stdout_on_print=true` in `project.godot` keeps release-build logs from being lost in `docker logs`/journald when the process is killed.
 
 ---
