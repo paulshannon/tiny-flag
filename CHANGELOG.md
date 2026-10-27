@@ -6,6 +6,8 @@ Each release's section becomes the notes of its GitHub Release (`tools/release_n
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-27
+
 ### Added
 - **Project created from [paulshannon/game-starter](https://github.com/paulshannon/game-starter)** at `bc6085f`: the shared multiplayer framework, tools, tests, deploy files and CI, plus the two skeleton games (`box_arena_2d`, `box_arena_3d`) to build Tiny Flag from.
 - Kenney interface packs (CC0): Input Prompts, Mobile Controls, UI Pack, Interface Sounds, Emotes, Cursor Pack, under `assets/kenney/`.
