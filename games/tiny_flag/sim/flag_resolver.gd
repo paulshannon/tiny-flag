@@ -46,13 +46,16 @@ static func resolve(map: FlagMap, state: FlagState, orders: Dictionary) -> Outco
 			_pickups(run, tick)
 			_captures(run, tick)
 		out.ticks.append(run.s.copy())
+	_respawn(run)  # the next turn is planned with everyone home and free
 	run.s.turn = state.turn + 1
 	out.state = run.s
 	out.events = run.events
 	return out
 
 
-## Pieces tagged last turn reappear untagged on their own home tile. Returns their ids.
+## Tagged pieces reappear untagged on their own home tile. Returns their ids. Run at the
+## end of a turn (the ticks keep showing where they were caught); at the start it is a
+## no-op guard for hand-built states that still carry tagged pieces.
 static func _respawn(run: _Run) -> Array[int]:
 	var ids: Array[int] = []
 	for p: FlagState.Piece in run.s.pieces:
@@ -73,8 +76,8 @@ static func _take_orders(run: _Run, orders: Dictionary, respawned: Array[int]) -
 		if typeof(key) != TYPE_INT or typeof(orders[key]) != TYPE_ARRAY:
 			continue
 		var id: int = key
-		# A piece tagged last turn had no orders (validation drops them); its old path
-		# would not start at its home tile anyway.
+		# A piece respawned at the start (hand-built input) had no valid orders; its old
+		# path would not start at its home tile anyway.
 		if id < 0 or id >= n or respawned.has(id):
 			continue
 		var path: Array[Vector2i] = []

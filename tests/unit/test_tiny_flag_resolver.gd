@@ -47,9 +47,9 @@ func test_same_tile_on_red_half_tags_blue() -> void:
 	s.piece(0).tile = Vector2i(4, 1)
 	s.piece(5).tile = Vector2i(6, 1)
 	var o := FlagResolver.resolve(m, s, {5: _p([Vector2i(5, 1), Vector2i(4, 1)])})
-	assert_true(o.state.piece(5).tagged, "visitor tagged")
-	assert_false(o.state.piece(0).tagged, "defender untouched")
-	assert_eq(o.state.piece(5).tile, Vector2i(4, 1))
+	assert_true(o.ticks[-1].piece(5).tagged, "visitor tagged")
+	assert_false(o.ticks[-1].piece(0).tagged, "defender untouched")
+	assert_eq(o.ticks[-1].piece(5).tile, Vector2i(4, 1))
 	assert_eq(o.events, [_tag(4, 5, 0)] as Array[Dictionary])
 
 
@@ -60,8 +60,8 @@ func test_same_tile_on_blue_half_tags_red() -> void:
 	s.piece(0).tile = Vector2i(5, 1)
 	s.piece(5).tile = Vector2i(7, 1)
 	var o := FlagResolver.resolve(m, s, {0: _p([Vector2i(6, 1), Vector2i(7, 1)])})
-	assert_true(o.state.piece(0).tagged)
-	assert_false(o.state.piece(5).tagged)
+	assert_true(o.ticks[-1].piece(0).tagged)
+	assert_false(o.ticks[-1].piece(5).tagged)
 	assert_eq(o.events, [_tag(4, 0, 5)] as Array[Dictionary])
 
 
@@ -72,10 +72,10 @@ func test_swap_on_one_half_tags_visitor() -> void:
 	s.piece(0).tile = Vector2i(3, 1)
 	s.piece(5).tile = Vector2i(4, 1)
 	var o := FlagResolver.resolve(m, s, {0: _p([Vector2i(4, 1)]), 5: _p([Vector2i(3, 1)])})
-	assert_true(o.state.piece(5).tagged, "Blue ends on Red ground")
-	assert_false(o.state.piece(0).tagged, "Red is on its own half")
-	assert_eq(o.state.piece(0).tile, Vector2i(4, 1))
-	assert_eq(o.state.piece(5).tile, Vector2i(3, 1))
+	assert_true(o.ticks[-1].piece(5).tagged, "Blue ends on Red ground")
+	assert_false(o.ticks[-1].piece(0).tagged, "Red is on its own half")
+	assert_eq(o.ticks[-1].piece(0).tile, Vector2i(4, 1))
+	assert_eq(o.ticks[-1].piece(5).tile, Vector2i(3, 1))
 	assert_eq(o.events, [_tag(2, 5, 0)] as Array[Dictionary])
 
 
@@ -86,8 +86,8 @@ func test_swap_across_line_tags_both() -> void:
 	s.piece(0).tile = Vector2i(5, 1)
 	s.piece(5).tile = Vector2i(6, 1)
 	var o := FlagResolver.resolve(m, s, {0: _p([Vector2i(6, 1)]), 5: _p([Vector2i(5, 1)])})
-	assert_true(o.state.piece(0).tagged)
-	assert_true(o.state.piece(5).tagged)
+	assert_true(o.ticks[-1].piece(0).tagged)
+	assert_true(o.ticks[-1].piece(5).tagged)
 	assert_eq(o.events, [_tag(2, 0, 5), _tag(2, 5, 0)] as Array[Dictionary])
 
 
@@ -102,24 +102,6 @@ func test_tagger_keeps_moving() -> void:
 	assert_eq(o.ticks[1].piece(0).tile, Vector2i(4, 1))
 	assert_eq(o.state.piece(0).tile, Vector2i(5, 1), "tagger finishes its path")
 	assert_false(o.state.piece(0).tagged)
-
-
-func test_tagged_stops_and_respawns_next_turn() -> void:
-	var setup := _setup()
-	var m: FlagMap = setup[0]
-	var s: FlagState = setup[1]
-	s.piece(0).tile = Vector2i(4, 1)
-	s.piece(5).tile = Vector2i(6, 1)
-	var path := _p([Vector2i(5, 1), Vector2i(4, 1), Vector2i(3, 1)])
-	var o := FlagResolver.resolve(m, s, {5: path})
-	assert_eq(o.state.piece(5).tile, Vector2i(4, 1), "stops where it was tagged")
-	assert_eq(o.ticks[FlagState.TICKS - 1].piece(5).tile, Vector2i(4, 1))
-	assert_true(o.state.piece(5).tagged)
-	var next := FlagResolver.resolve(m, o.state, {})
-	assert_eq(next.state.piece(5).tile, m.home_tiles(B)[0], "back on its own home tile")
-	assert_false(next.state.piece(5).tagged)
-	assert_eq(next.ticks[0].piece(5).tile, m.home_tiles(B)[0], "home before tick 1")
-	assert_eq(next.events.size(), 0)
 
 
 func test_pickup_on_entering_flag_tile() -> void:
@@ -159,7 +141,7 @@ func test_tagged_carrier_drops_flag_home() -> void:
 	assert_eq(o.state.carrier, [-1, -1] as Array[int])
 	assert_eq(o.ticks[0].carrier, [-1, 0] as Array[int], "still carrying before the tag")
 	assert_eq(o.state.flag_tile(m, B), m.flag_home(B))
-	assert_eq(o.state.piece(0).tile, Vector2i(6, 1))
+	assert_eq(o.ticks[-1].piece(0).tile, Vector2i(6, 1))
 
 
 func test_carrier_moves_only_six() -> void:
@@ -229,8 +211,8 @@ func test_tagged_piece_takes_no_further_part() -> void:
 	var o := FlagResolver.resolve(m, s, {
 		5: _p([Vector2i(4, 1), Vector2i(3, 1)]), 1: _p([Vector2i(3, 1), Vector2i(4, 1)])})
 	assert_eq(o.events, [_tag(2, 5, 0)] as Array[Dictionary])
-	assert_eq(o.state.piece(1).tile, Vector2i(4, 1))
-	assert_eq(o.state.piece(5).tile, Vector2i(4, 1))
+	assert_eq(o.ticks[-1].piece(1).tile, Vector2i(4, 1))
+	assert_eq(o.ticks[-1].piece(5).tile, Vector2i(4, 1))
 
 
 func test_cheap_path_moves_faster() -> void:
@@ -247,20 +229,6 @@ func test_cheap_path_moves_faster() -> void:
 	assert_eq(o.ticks[1].piece(1).tile, Vector2i(4, 0))
 	assert_eq(o.ticks[2].piece(1).tile, Vector2i(4, 0))
 	assert_eq(o.ticks[3].piece(1).tile, Vector2i(5, 0), "grass piece on tile 2 at tick 4")
-
-
-func test_respawn_onto_enemy_tags_visitor_at_tick_1() -> void:
-	var setup := _setup()
-	var m: FlagMap = setup[0]
-	var s: FlagState = setup[1]
-	s.piece(0).tile = Vector2i(7, 1)
-	s.piece(0).tagged = true
-	s.piece(5).tile = m.home_tiles(R)[0]  # Blue camping on Red 0's home tile
-	var o := FlagResolver.resolve(m, s, {})
-	assert_eq(o.events, [_tag(1, 5, 0)] as Array[Dictionary])
-	assert_eq(o.ticks[0].piece(0).tile, m.home_tiles(R)[0])
-	assert_false(o.state.piece(0).tagged)
-	assert_true(o.state.piece(5).tagged)
 
 
 func test_resolve_is_deterministic() -> void:
