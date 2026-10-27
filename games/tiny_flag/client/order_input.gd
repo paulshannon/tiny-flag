@@ -20,7 +20,8 @@ var _pending: Vector2i = Vector2i(-1, -1)
 var _last_sent: Array = []
 ## Fingers down on the board, by touch index. Browsers number touches freely
 ## (iOS Safari uses large ids, Chrome counts up), so "first finger" means "no
-## other finger down", never index 0.
+## other finger down", never index 0. Kept in _input, which sees every event, so a
+## release a Control consumes still counts; cleared when focus is lost.
 var _fingers: Dictionary[int, bool] = {}
 
 
@@ -29,21 +30,32 @@ func _init(order_model: OrderModel, board_view: BoardView) -> void:
 	board = board_view
 
 
+func _input(event: InputEvent) -> void:
+	_track_finger(event)
+
+
+## Releases eaten by an app switch or a system gesture never arrive: start clean.
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT \
+			or what == NOTIFICATION_APPLICATION_PAUSED:
+		_fingers.clear()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if handle_event(event):
 		get_viewport().set_input_as_handled()
 
 
-## True if the event was used.
+## True if the event was used. Repeats _input's finger bookkeeping (it's idempotent),
+## so it also works on its own.
 func handle_event(event: InputEvent) -> bool:
+	_track_finger(event)
 	var st := event as InputEventScreenTouch
 	var lone_finger: bool = false
-	if st != null:  # tracked even while disabled, so no finger is left stuck down
+	if st != null:
 		if not st.pressed:
-			_fingers.erase(st.index)
 			return false
-		lone_finger = _fingers.is_empty() or (_fingers.size() == 1 and _fingers.has(st.index))
-		_fingers[st.index] = true
+		lone_finger = _fingers.size() == 1 and _fingers.has(st.index)
 	if not enabled:
 		return false
 	var mb := event as InputEventMouseButton
@@ -97,6 +109,17 @@ func reset() -> void:
 	_pending = Vector2i(-1, -1)
 	_last_sent = []
 	_fingers.clear()  # a release some other control took can't block the next turn
+
+
+## Fingers down, tracked even while disabled so none is left stuck down.
+func _track_finger(event: InputEvent) -> void:
+	var st := event as InputEventScreenTouch
+	if st == null:
+		return
+	if st.pressed:
+		_fingers[st.index] = true
+	else:
+		_fingers.erase(st.index)
 
 
 func _changed() -> void:

@@ -22,5 +22,6 @@ Each release's section becomes the notes of its GitHub Release (`tools/release_n
 
 ### Fixed
 - Tiny Flag spectators see only the public view (pieces both teams can see, plus flag carriers), still one turn behind. They used to get every piece, so a second browser tab could see through the fog of war.
+- A Tiny Flag finger whose release was taken by a button, or lost to an app switch or system gesture, no longer blocks every later tap until the next turn: fingers are tracked from every input event and forgotten when the window loses focus.
 - Tiny Flag board taps work in real browsers: the order input took only touch index 0 as the first finger, but browsers number touches freely (iOS Safari uses large ids, Chrome counts up), so taps on pieces and tiles were ignored. Now any lone finger counts.
 - Tagged pieces in Tiny Flag are back on their home tile and can be ordered in the very next planning phase (they used to sit out an extra turn where they were caught).

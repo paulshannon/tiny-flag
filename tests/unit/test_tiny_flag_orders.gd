@@ -198,3 +198,53 @@ func test_a_lone_finger_works_with_any_index() -> void:
 	assert_true(input.handle_event(tap))
 	input.free()
 	board.free()
+
+
+## A release that a Control consumes never reaches _unhandled_input; _input still sees it,
+## so the finger isn't left stuck down and the next tap works.
+func test_a_release_consumed_elsewhere_does_not_block_the_next_tap() -> void:
+	var board := BoardView.new()
+	board.set_map(_map())
+	var m := _model()
+	var input := OrderInput.new(m, board)
+	input.enabled = true
+	var tap := InputEventScreenTouch.new()
+	tap.pressed = true
+	tap.index = 7
+	tap.position = board.tile_center(Vector2i(2, 1))
+	input._input(tap)
+	assert_true(input.handle_event(tap))
+	var up := InputEventScreenTouch.new()
+	up.index = 7
+	input._input(up)  # the release only reaches the bookkeeping path
+	tap.index = 8
+	tap.position = board.tile_center(Vector2i(4, 1))
+	input._input(tap)
+	assert_true(input.handle_event(tap), "the next lone finger is accepted")
+	input.free()
+	board.free()
+
+
+## Losing focus (app switch, system gesture) can swallow releases: forget every finger.
+func test_focus_out_clears_fingers() -> void:
+	var board := BoardView.new()
+	board.set_map(_map())
+	var m := _model()
+	var input := OrderInput.new(m, board)
+	input.enabled = true
+	var tap := InputEventScreenTouch.new()
+	tap.pressed = true
+	tap.position = board.tile_center(Vector2i(2, 1))
+	for what: int in [Node.NOTIFICATION_APPLICATION_FOCUS_OUT, Node.NOTIFICATION_WM_WINDOW_FOCUS_OUT, Node.NOTIFICATION_APPLICATION_PAUSED]:
+		tap.index = 1
+		input._input(tap)
+		input.handle_event(tap)
+		input.notification(what)  # finger 1's release is lost
+		tap.index = 2
+		input._input(tap)
+		assert_true(input.handle_event(tap), "lone finger after notification %d" % what)
+		var up := InputEventScreenTouch.new()
+		up.index = 2
+		input._input(up)
+	input.free()
+	board.free()
