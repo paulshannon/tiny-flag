@@ -64,7 +64,8 @@ static func can_see(map: FlagMap, viewers: Array[Vector2i], tile: Vector2i, carr
 
 
 ## Ids of `team`'s enemies that `team` can see. Every piece of `team` is a viewer,
-## tagged ones included (they stand on their tile until respawn).
+## tagged ones included (during a turn's playback they stand where they were
+## caught until the turn ends and they respawn).
 static func visible_enemy_ids(map: FlagMap, state: FlagState, team: int) -> Array[int]:
 	var viewers: Array[Vector2i] = []
 	for p: FlagState.Piece in state.pieces:

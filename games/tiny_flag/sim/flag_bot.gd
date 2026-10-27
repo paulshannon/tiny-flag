@@ -33,7 +33,7 @@ func orders(map: FlagMap, view: Dictionary) -> Array:
 	var enemy_flag := Vector2i(flags[1 - team][0], flags[1 - team][1])
 	var enemies: Array[Vector2i] = []
 	for r: Array in rows:
-		if r[1] != team and r[5] == 0:  # a tagged enemy is gone next turn
+		if r[1] != team and r[5] == 0:  # defensive: tagged pieces respawn at turn end, so a turn-start view has none
 			enemies.append(Vector2i(r[2], r[3]))
 	var out: Array = []
 	for r: Array in rows:

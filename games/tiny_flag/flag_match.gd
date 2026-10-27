@@ -220,6 +220,8 @@ func _resolve() -> void:
 ## A team moved if one of its pieces, untagged at the start, stood elsewhere at any tick.
 func _count_moves(start: FlagState, outcome: FlagResolver.Outcome) -> void:
 	for p: FlagState.Piece in start.pieces:
+		# p.tagged is defensive: tagged pieces respawn at turn end, so a turn's
+		# start state has none.
 		if p.tagged or moved[p.team]:
 			continue
 		for snap: FlagState in outcome.ticks:

@@ -138,6 +138,8 @@ static func validate_orders(map: FlagMap, state: FlagState, team: int, raw: Vari
 		if id < 0 or id >= state.pieces.size() or out.has(id):
 			continue
 		var p := state.piece(id)
+		# p.tagged is defensive: tagged pieces respawn at turn end, so pieces
+		# are never tagged while orders are planned.
 		if p.team != team or p.tagged:
 			continue
 		var path := decode(order[1])
