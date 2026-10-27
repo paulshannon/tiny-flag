@@ -58,7 +58,7 @@ func test_orders_are_valid() -> void:
 func test_carrier_goes_home() -> void:
 	var m := _map()
 	var s := FlagState.new_match(m)
-	s.piece(5).tile = Vector2i(6, 8)  # Blue piece with Red's flag, near Red's half
+	s.piece(5).tile = Vector2i(6, 8)  # Blue piece with Red's flag, deep in Red's half
 	s.carrier[R] = 5
 	var bot := FlagBot.new(1)
 	var raw := bot.orders(m, FlagWire.view_for(m, s, B))
@@ -79,15 +79,15 @@ func test_carrier_goes_home() -> void:
 func test_attacker_flees_nearby_enemy() -> void:
 	var m := _map()
 	var s := FlagState.new_match(m)
-	s.piece(0).tile = Vector2i(22, 8)  # Red attacker on Blue's half
-	s.piece(5).tile = Vector2i(24, 8)  # Blue piece 2 tiles east
+	s.piece(0).tile = Vector2i(36, 21)  # Red attacker on Blue's half, open grass
+	s.piece(5).tile = Vector2i(38, 21)  # Blue piece 2 tiles east
 	var raw := FlagBot.new(3).orders(m, FlagWire.view_for(m, s, R))
 	var seen := false
 	for o: Array in raw:
 		if o[0] == 0:
 			seen = true
 			var first := FlagPath.decode(o[1])[0]
-			assert_true(absi(first.x - 24) + absi(first.y - 8) > 2, "steps away")
+			assert_true(absi(first.x - 38) + absi(first.y - 21) > 2, "steps away")
 	assert_true(seen, "attacker ordered")
 
 
