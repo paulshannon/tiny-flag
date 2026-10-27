@@ -1,18 +1,18 @@
 extends TestCase
 
 
-func test_defaults_to_2d_client_localhost() -> void:
+func test_defaults_to_default_game_client_localhost() -> void:
 	var c: LaunchConfig = LaunchConfig.from_args(PackedStringArray())
 	assert_false(c.is_server)
-	assert_eq(c.game, "2d")
-	assert_eq(c.port, Protocol.port_for("2d"))
-	assert_eq(c.url, "ws://127.0.0.1:%d" % Protocol.port_for("2d"))
+	assert_eq(c.game, Protocol.DEFAULT_GAME)
+	assert_eq(c.port, Protocol.port_for(Protocol.DEFAULT_GAME))
+	assert_eq(c.url, "ws://127.0.0.1:%d" % Protocol.port_for(Protocol.DEFAULT_GAME))
 
 
 func test_server_args() -> void:
-	var c: LaunchConfig = LaunchConfig.from_args(PackedStringArray(["--server", "--game=3d", "--port=7000", "--run-seconds=5", "--expect-peers=2"]))
+	var c: LaunchConfig = LaunchConfig.from_args(PackedStringArray(["--server", "--game=flag", "--port=7000", "--run-seconds=5", "--expect-peers=2"]))
 	assert_true(c.is_server)
-	assert_eq(c.game, "3d")
+	assert_eq(c.game, "flag")
 	assert_eq(c.port, 7000)
 	assert_near(c.run_seconds, 5.0)
 	assert_eq(c.expect_peers, 2)
@@ -25,18 +25,18 @@ func test_bind_address() -> void:
 
 
 func test_unknown_game_falls_back() -> void:
-	assert_eq(LaunchConfig.from_args(PackedStringArray(["--game=pong"])).game, "2d")
+	assert_eq(LaunchConfig.from_args(PackedStringArray(["--game=pong"])).game, Protocol.DEFAULT_GAME)
 
 
 func test_web_https_uses_wss_proxy_path() -> void:
-	var c: LaunchConfig = LaunchConfig.from_web_location("https:", "play.example.com", "play.example.com", "?game=3d")
-	assert_eq(c.url, "wss://play.example.com/ws/3d")
+	var c: LaunchConfig = LaunchConfig.from_web_location("https:", "play.example.com", "play.example.com", "?game=flag")
+	assert_eq(c.url, "wss://play.example.com/ws/flag")
 
 
 func test_web_http_uses_direct_port() -> void:
 	var c: LaunchConfig = LaunchConfig.from_web_location("http:", "localhost:8000", "localhost", "")
-	assert_eq(c.game, "2d", "no ?game= opens the default game")
-	assert_eq(c.url, "ws://localhost:%d" % Protocol.port_for("2d"))
+	assert_eq(c.game, Protocol.DEFAULT_GAME, "no ?game= opens the default game")
+	assert_eq(c.url, "ws://localhost:%d" % Protocol.port_for(Protocol.DEFAULT_GAME))
 
 
 func test_web_explicit_server_wins() -> void:

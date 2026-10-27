@@ -3,7 +3,7 @@
 #
 #   cd deploy
 #   DOMAIN=play.example.com docker compose up -d
-#   docker compose logs -f game-2d
+#   docker compose logs -f game-flag
 #
 # Variables (shell or a deploy/.env file):
 #   DOMAIN             public domain, or ":80" for a plain-HTTP local test
@@ -18,24 +18,17 @@ x-game: &game
   restart: unless-stopped
 
 services:
-  game-2d:
+  game-flag:
     <<: *game
     environment:
-      GAME: 2d
+      GAME: flag
     volumes:
-      - game-2d-data:/data
-
-  game-3d:
-    <<: *game
-    environment:
-      GAME: 3d
-    volumes:
-      - game-3d-data:/data
+      - game-flag-data:/data
 
   caddy:
     image: caddy:2
     restart: unless-stopped
-    depends_on: [game-2d, game-3d]
+    depends_on: [game-flag]
     environment:
       DOMAIN: ${DOMAIN:?set DOMAIN, e.g. play.example.com (or :80 for a local HTTP test)}
     ports:
@@ -49,7 +42,6 @@ services:
       - caddy-config:/config
 
 volumes:
-  game-2d-data:
-  game-3d-data:
+  game-flag-data:
   caddy-data:
   caddy-config:

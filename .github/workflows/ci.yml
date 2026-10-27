@@ -59,7 +59,7 @@ jobs:
       - name: Smoke test the server image (all games + a server restart)
         run: |
           SERVER_IMAGE=game-server:ci tools/smoke.sh all 8 2
-          SERVER_IMAGE=game-server:ci SMOKE_RESTART=1 tools/smoke.sh 2d 8 2
+          SERVER_IMAGE=game-server:ci SMOKE_RESTART=1 tools/smoke.sh flag 8 2
 
       - uses: actions/upload-artifact@v4
         with:
