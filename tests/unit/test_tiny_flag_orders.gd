@@ -145,10 +145,14 @@ func test_off_board_taps_and_clicks_and_second_fingers_pass_through() -> void:
 	tap.position = board.tile_center(Vector2i(-2, 1))  # off the map (e.g. the touch Menu button)
 	assert_false(input.handle_event(tap))
 	tap.position = board.tile_center(Vector2i(2, 1))
-	tap.index = 1  # a second finger
+	tap.index = 1  # a second finger while the first is still down
 	assert_false(input.handle_event(tap))
 	assert_eq(m.selected, -1)
-	tap.index = 0
+	var up := InputEventScreenTouch.new()
+	for i: int in [0, 1]:
+		up.index = i
+		assert_false(input.handle_event(up))
+	tap.index = 1  # now the only finger down
 	assert_true(input.handle_event(tap))
 	assert_eq(m.selected, 0)
 	var mouse := InputEventMouseButton.new()
@@ -159,5 +163,38 @@ func test_off_board_taps_and_clicks_and_second_fingers_pass_through() -> void:
 	mouse.position = board.tile_center(Vector2i(4, 1))
 	assert_true(input.handle_event(mouse))
 	assert_eq(m.path_of(0).size(), 2)
+	input.free()
+	board.free()
+
+
+## Browsers number touches freely (iOS Safari: large ids; Chrome: counting up), so a
+## lone finger must work whatever its index. Found in the Task 11 browser check.
+func test_a_lone_finger_works_with_any_index() -> void:
+	var board := BoardView.new()
+	board.set_map(_map())
+	var m := _model()
+	var input := OrderInput.new(m, board)
+	input.enabled = true
+	var tap := InputEventScreenTouch.new()
+	var up := InputEventScreenTouch.new()
+	var steps: Array = [[17, Vector2i(2, 1)], [18, Vector2i(4, 1)], [1234567, Vector2i(4, 1)]]
+	for step: Array in steps:
+		tap.index = step[0]
+		up.index = step[0]
+		tap.pressed = true
+		tap.position = board.tile_center(step[1])
+		assert_true(input.handle_event(tap), "finger %d" % tap.index)
+		assert_false(input.handle_event(up))
+	assert_eq(m.selected, 0)
+	assert_eq(m.path_of(0).size(), 2)
+	# A finger released while planning was off doesn't block the next turn.
+	input.enabled = false
+	tap.index = 3
+	input.handle_event(tap)
+	input.reset()
+	input.enabled = true
+	tap.index = 4
+	tap.position = board.tile_center(Vector2i(2, 1))
+	assert_true(input.handle_event(tap))
 	input.free()
 	board.free()

@@ -18,6 +18,10 @@ var blocked: Callable
 
 var _pending: Vector2i = Vector2i(-1, -1)
 var _last_sent: Array = []
+## Fingers down on the board, by touch index. Browsers number touches freely
+## (iOS Safari uses large ids, Chrome counts up), so "first finger" means "no
+## other finger down", never index 0.
+var _fingers: Dictionary[int, bool] = {}
 
 
 func _init(order_model: OrderModel, board_view: BoardView) -> void:
@@ -32,6 +36,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 ## True if the event was used.
 func handle_event(event: InputEvent) -> bool:
+	var st := event as InputEventScreenTouch
+	var lone_finger: bool = false
+	if st != null:  # tracked even while disabled, so no finger is left stuck down
+		if not st.pressed:
+			_fingers.erase(st.index)
+			return false
+		lone_finger = _fingers.is_empty() or (_fingers.size() == 1 and _fingers.has(st.index))
+		_fingers[st.index] = true
 	if not enabled:
 		return false
 	var mb := event as InputEventMouseButton
@@ -48,10 +60,9 @@ func handle_event(event: InputEvent) -> bool:
 			clear_selected()
 			return true
 		return false
-	var st := event as InputEventScreenTouch
-	# First finger only: a second finger can't confirm a path. Off-board taps (the
+	# One finger only: a second finger can't confirm a path. Off-board taps (the
 	# starter's touch Menu button) are left for other controls.
-	if st != null and st.pressed and st.index == 0 and not _is_blocked(st.position):
+	if st != null and lone_finger and not _is_blocked(st.position):
 		var t := board.tile_at(st.position)
 		if not model.map.in_bounds(t):
 			return false
@@ -85,6 +96,7 @@ func clear_selected() -> void:
 func reset() -> void:
 	_pending = Vector2i(-1, -1)
 	_last_sent = []
+	_fingers.clear()  # a release some other control took can't block the next turn
 
 
 func _changed() -> void:

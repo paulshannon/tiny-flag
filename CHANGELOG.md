@@ -16,4 +16,5 @@ Each release's section becomes the notes of its GitHub Release (`tools/release_n
 - The starter's box-arena skeletons (`box_arena_2d`, `box_arena_3d`): Tiny Flag is the only game here now (`Protocol.PORTS`, `tools/smoke.sh all`, the Caddyfiles, compose services and systemd notes list just `flag`). `tools/run_server.sh`, `tools/run_client.sh` and the Docker entrypoint default to `Protocol.DEFAULT_GAME` when no game is named; the image defaults to `GAME=flag`. To start another game, copy a skeleton from paulshannon/game-starter.
 
 ### Fixed
+- Tiny Flag board taps work in real browsers: the order input took only touch index 0 as the first finger, but browsers number touches freely (iOS Safari uses large ids, Chrome counts up), so taps on pieces and tiles were ignored. Now any lone finger counts.
 - Tagged pieces in Tiny Flag are back on their home tile and can be ordered in the very next planning phase (they used to sit out an extra turn where they were caught).
