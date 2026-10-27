@@ -130,8 +130,9 @@ func test_validate_drops_bad_orders_individually() -> void:
 		[5, _flat([9, 0])],                       # enemy piece
 		[1, _flat([p1.x + 1, p1.y])],             # same piece twice
 		[2, _flat([5, 1])],                       # gap (piece 2 at (2,0))
-		[3, _flat([0, 1, 0, 2, 0, 3])],           # piece 3 at (0,1): (0,3) out of map
-		[4, _flat([4, 1, 5, 1, 6, 1, 7, 1, 8, 1])],  # 5 grass steps = 10 > 8
+		[4, _flat([3, 1, 3, 2, 3, 3])],           # piece 4 at (2,1): legal steps, then (3,3) off the map
+		[2, _flat([2, -1])],                      # negative coordinate
+		[3, _flat([1, 1, 2, 1, 3, 1, 4, 1, 5, 1])],  # piece 3 at (0,1): adjacent, 5 steps = 10 > 8
 		[0, long_path],                           # more than 16 steps
 		[0, PackedInt32Array([p0.x, 1, 5])],      # odd length
 		[0, _flat([99999, 99999])],               # coords out of range
@@ -157,7 +158,8 @@ func test_validate_rejects_non_array_payload() -> void:
 	var big: Array = []
 	for i: int in 1000:
 		big.append([i % 10, _flat([3, 0])])
-	assert_true(FlagPath.validate_orders(m, s, R, big).size() <= 5)
+	# Only Red piece 2 at (2,0) can legally step to (3,0).
+	assert_eq(FlagPath.validate_orders(m, s, R, big).keys(), [2])
 	var nested: Array = [[[[]]], [[], []], [null, null], [2, null]]
 	assert_eq(FlagPath.validate_orders(m, s, R, nested).size(), 0)
 
@@ -168,3 +170,26 @@ func test_validate_ignores_tagged_pieces() -> void:
 	s.piece(2).tagged = true
 	assert_eq(FlagPath.validate_orders(m, s, R, [[2, _flat([3, 0])]]).size(), 0)
 	assert_eq(FlagPath.validate_orders(m, s, R, [[1, _flat([2, 0])]]).size(), 1)  # untagged neighbour still fine
+
+
+func test_validate_budget_for_walker_and_carrier() -> void:
+	var m := FlagMap.parse(MINI)
+	var s := FlagState.new_match(m)
+	# Piece 0 at (0,0): (1,0) base 2, (2,0) base 2, (3,0) grass 2 = 6, then (3,1) path 1 = 7.
+	var six := _flat([1, 0, 2, 0, 3, 0])
+	var seven := _flat([1, 0, 2, 0, 3, 0, 3, 1])
+	assert_eq(FlagPath.validate_orders(m, s, R, [[0, six]]).keys(), [0])
+	assert_eq(FlagPath.validate_orders(m, s, R, [[0, seven]]).keys(), [0])   # 7 <= 8
+	s.carrier[B] = 0
+	assert_eq(FlagPath.validate_orders(m, s, R, [[0, six]]).keys(), [0])     # exactly 6
+	assert_eq(FlagPath.validate_orders(m, s, R, [[0, seven]]).size(), 0)     # 7 > 6
+
+
+func test_find_path_tie_break_is_up_right_down_left() -> void:
+	var m := _grass_map()
+	# (4,0) -> (5,1): right-then-down and down-then-right cost the same; right comes before down.
+	var a := FlagPath.find_path(m, Vector2i(4, 0), Vector2i(5, 1))
+	assert_eq(a, [Vector2i(5, 0), Vector2i(5, 1)] as Array[Vector2i])
+	# (5,1) -> (4,0): up-then-left and left-then-up cost the same; up comes before left.
+	var b := FlagPath.find_path(m, Vector2i(5, 1), Vector2i(4, 0))
+	assert_eq(b, [Vector2i(5, 0), Vector2i(4, 0)] as Array[Vector2i])
