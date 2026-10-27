@@ -13,3 +13,9 @@ All [Kenney](https://kenney.nl) assets are CC0 — no attribution required, but 
 - tiny-city — Kenney (kenney.nl), CC0. Added 2026-10-27 from kenney_tiny-city.zip
 - tiny-town — Kenney (kenney.nl), CC0. Added 2026-10-27 from kenney_tiny-town.zip
 - tiny-farm — Kenney (kenney.nl), CC0. Added 2026-10-27 from kenney_tiny-farm.zip
+- input-prompts — Kenney (kenney.nl), CC0. Added 2026-10-27 from kenney_input-prompts_1.5.zip
+- ui-pack — Kenney (kenney.nl), CC0. Added 2026-10-27 from kenney_ui-pack.zip
+- interface-sounds — Kenney (kenney.nl), CC0. Added 2026-10-27 from kenney_interface-sounds.zip
+- emotes-pack — Kenney (kenney.nl), CC0. Added 2026-10-27 from kenney_emotes-pack.zip
+- cursor-pack — Kenney (kenney.nl), CC0. Added 2026-10-27 from kenney_cursor-pack.zip
+- mobile-controls — Kenney (kenney.nl), CC0. Added 2026-10-27 from kenney_mobile-controls.zip
