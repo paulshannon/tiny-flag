@@ -169,16 +169,15 @@ func _draw_controls() -> void:
 	var view: Vector2 = _canvas.size
 	var base := Color(1, 1, 1, 0.12)
 	var edge := Color(1, 1, 1, 0.35)
-	if not stick_enabled:
-		pass
-	elif _stick.active:
-		_canvas.draw_circle(_stick.center, TouchStick.RADIUS, base)
-		_canvas.draw_arc(_stick.center, TouchStick.RADIUS, 0.0, TAU, 48, edge, 2.0)
-		_canvas.draw_circle(_stick.knob, TouchStick.RADIUS * 0.4, Color(1, 1, 1, 0.45))
-	else:
-		# Resting hint where a left thumb naturally lands.
-		var hint := Vector2(BUTTON_INSET.x, view.y - BUTTON_INSET.y)
-		_canvas.draw_arc(hint, TouchStick.RADIUS, 0.0, TAU, 48, edge, 2.0)
+	if stick_enabled:
+		if _stick.active:
+			_canvas.draw_circle(_stick.center, TouchStick.RADIUS, base)
+			_canvas.draw_arc(_stick.center, TouchStick.RADIUS, 0.0, TAU, 48, edge, 2.0)
+			_canvas.draw_circle(_stick.knob, TouchStick.RADIUS * 0.4, Color(1, 1, 1, 0.45))
+		else:
+			# Resting hint where a left thumb naturally lands.
+			var hint := Vector2(BUTTON_INSET.x, view.y - BUTTON_INSET.y)
+			_canvas.draw_arc(hint, TouchStick.RADIUS, 0.0, TAU, 48, edge, 2.0)
 	if not action.is_empty():
 		_draw_button(button_center(view), BUTTON_RADIUS, InputSetup.label(action), 22, _button_index != -1)
 	_draw_button(MENU_CENTER, MENU_RADIUS, "Menu", 15, _menu_index != -1)
