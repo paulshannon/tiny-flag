@@ -35,6 +35,7 @@ func test_no_leaks_in_random_matches() -> void:
 	var m := FlagMap.load_map(FlagMap.FARM_PATH)
 	var checked := 0
 	var enemy_rows_seen := 0
+	var tags := 0
 	for seed_i: int in 50:
 		var rng := RandomNumberGenerator.new()
 		rng.seed = seed_i
@@ -44,12 +45,22 @@ func test_no_leaks_in_random_matches() -> void:
 			for team: int in [R, B]:
 				var t := FlagWire.turn_for(m, o, team)
 				assert_eq(t["turn"], s.turn)
-				for rows: Array in t["ticks"]:
+				var ticks: Array = t["ticks"]
+				for k: int in ticks.size():
+					var rows: Array = ticks[k]
 					assert_eq(FlagWire.leaked_enemies(m, team, rows), [] as Array[int], "seed %d turn %d team %d" % [seed_i, turn_i, team])
+					# And nothing the team can see is missing (a filter that drops
+					# every enemy would pass the leak check alone).
+					var ids := _ids(rows)
+					for id: int in FlagVision.visible_enemy_ids(m, o.ticks[k], team):
+						assert_true(ids.has(id), "seed %d turn %d tick %d team %d misses %d" % [seed_i, turn_i, k + 1, team, id])
 					checked += 1
 					for r: Array in rows:
 						if r[1] != team:
 							enemy_rows_seen += 1
+			for e: Dictionary in o.events:
+				if e["kind"] == "tag":
+					tags += 1
 			s = o.state
 			for team: int in [R, B]:
 				var v := FlagWire.view_for(m, s, team)
@@ -66,6 +77,7 @@ func test_no_leaks_in_random_matches() -> void:
 				assert_eq(got, want, "view matches FlagVision")
 	assert_eq(checked, 50 * 10 * 2 * FlagState.TICKS)
 	assert_true(enemy_rows_seen > 0, "the matches actually showed some enemies")
+	assert_true(tags > 0, "pieces really met: at least one tag")
 
 
 ## Spectator rows are the public view: a piece is there exactly when both teams can see
