@@ -65,7 +65,7 @@ func _start_client() -> void:
 		# Child of Main, not the game, so it survives the game being rebuilt
 		# after a disconnect. Harmless on non-touch screens: draws nothing
 		# until a touch arrives.
-		var controls := TouchControls.new(_game.action_button())
+		var controls := TouchControls.new(_game.action_button(), _game.touch_stick())
 		controls.name = "TouchControls"
 		add_child(controls)
 		_menu = _game.make_menu()

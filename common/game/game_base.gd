@@ -121,6 +121,11 @@ func action_button() -> StringName:
 	return &""
 
 
+## False hides the touch stick and lets left-half taps through, for games that read taps on the board.
+func touch_stick() -> bool:
+	return true
+
+
 ## The game's names for its actions, in display order, for a controls
 ## settings page (ControlsEditor).
 func control_names() -> Dictionary:

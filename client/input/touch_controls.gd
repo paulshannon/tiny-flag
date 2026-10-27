@@ -22,6 +22,8 @@ const MENU_CENTER := Vector2(56, 96)
 
 ## Input action the button presses; empty for no button.
 var action: StringName = &""
+## False for games that read taps on the board: no stick, left-half touches pass through.
+var stick_enabled: bool = true
 
 var _stick := TouchStick.new()
 var _stick_index: int = -1
@@ -32,8 +34,9 @@ var _shown: bool = false
 var _canvas: Control
 
 
-func _init(button_action: StringName = &"") -> void:
+func _init(button_action: StringName = &"", stick: bool = true) -> void:
 	action = button_action
+	stick_enabled = stick
 	layer = 5  # above the game, below nothing in particular; HUD buttons still get taps
 
 
@@ -111,7 +114,7 @@ func _touch_down(index: int, pos: Vector2, view: Vector2) -> bool:
 		Input.action_press(action)
 		_redraw()
 		return true
-	if _stick_index == -1 and pos.x < view.x * 0.5:
+	if stick_enabled and _stick_index == -1 and pos.x < view.x * 0.5:
 		_stick_index = index
 		_stick.press(pos)
 		_apply_stick()
@@ -166,7 +169,9 @@ func _draw_controls() -> void:
 	var view: Vector2 = _canvas.size
 	var base := Color(1, 1, 1, 0.12)
 	var edge := Color(1, 1, 1, 0.35)
-	if _stick.active:
+	if not stick_enabled:
+		pass
+	elif _stick.active:
 		_canvas.draw_circle(_stick.center, TouchStick.RADIUS, base)
 		_canvas.draw_arc(_stick.center, TouchStick.RADIUS, 0.0, TAU, 48, edge, 2.0)
 		_canvas.draw_circle(_stick.knob, TouchStick.RADIUS * 0.4, Color(1, 1, 1, 0.45))

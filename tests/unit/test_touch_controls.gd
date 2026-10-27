@@ -145,6 +145,26 @@ func test_fire_button_presses_fire() -> void:
 	_done(c)
 
 
+func test_no_stick_leaves_left_half_alone() -> void:
+	InputSetup.ensure_actions()
+	var c := TouchControls.new(&"", false)
+	assert_false(c.handle_event(_touch(0, Vector2(200, 500), true), VIEW))
+	assert_false(c.handle_event(_drag(0, Vector2(400, 500)), VIEW))
+	assert_eq(_move(), Vector2.ZERO)
+	assert_false(c.handle_event(_touch(0, Vector2(400, 500), false), VIEW))
+	_done(c)
+
+
+func test_menu_button_works_without_stick() -> void:
+	InputSetup.ensure_actions()
+	var c := TouchControls.new(&"", false)
+	assert_true(c.handle_event(_touch(2, TouchControls.MENU_CENTER, true), VIEW))
+	assert_true(Input.is_action_pressed(InputSetup.MENU))
+	assert_true(c.handle_event(_touch(2, TouchControls.MENU_CENTER, false), VIEW))
+	assert_false(Input.is_action_pressed(InputSetup.MENU))
+	_done(c)
+
+
 func test_menu_button_presses_menu() -> void:
 	var c := _controls()
 	assert_true(c.handle_event(_touch(2, TouchControls.MENU_CENTER, true), VIEW))
