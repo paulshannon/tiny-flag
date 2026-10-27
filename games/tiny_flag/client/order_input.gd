@@ -39,15 +39,23 @@ func handle_event(event: InputEvent) -> bool:
 		if not mb.pressed or mb.device == InputEvent.DEVICE_ID_EMULATION or _is_blocked(mb.position):
 			return false
 		if mb.button_index == MOUSE_BUTTON_LEFT:
-			click(board.tile_at(mb.position))
+			var c := board.tile_at(mb.position)
+			if not model.map.in_bounds(c):
+				return false  # off the board: leave it to other controls
+			click(c)
 			return true
 		if mb.button_index == MOUSE_BUTTON_RIGHT:
 			clear_selected()
 			return true
 		return false
 	var st := event as InputEventScreenTouch
-	if st != null and st.pressed and not _is_blocked(st.position):
-		tap(board.tile_at(st.position))
+	# First finger only: a second finger can't confirm a path. Off-board taps (the
+	# starter's touch Menu button) are left for other controls.
+	if st != null and st.pressed and st.index == 0 and not _is_blocked(st.position):
+		var t := board.tile_at(st.position)
+		if not model.map.in_bounds(t):
+			return false
+		tap(t)
 		return true
 	return false
 

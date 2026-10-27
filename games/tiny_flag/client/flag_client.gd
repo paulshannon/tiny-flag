@@ -35,7 +35,7 @@ func _ready() -> void:
 	game.turn_started_received.connect(_on_turn_started)
 	game.turn_resolved_received.connect(_on_turn_resolved)
 	game.match_over_received.connect(hud.on_match_over)
-	board.playback_finished.connect(game.send_playback_done)
+	board.playback_finished.connect(_on_playback_finished)
 	board.event_shown.connect(hud.on_event)
 	input.orders_changed.connect(game.send_orders)
 	hud.lock_in_pressed.connect(func() -> void: game.send_lock_in(model.turn))
@@ -62,3 +62,9 @@ func _on_turn_resolved(turn: Dictionary) -> void:
 	board.show_paths(null)
 	hud.on_turn_resolved(turn)
 	board.play_turn(turn)
+
+
+## Only a side's playback paces the match; spectators don't answer.
+func _on_playback_finished(turn: int) -> void:
+	if model.team >= 0:
+		game.send_playback_done(turn)

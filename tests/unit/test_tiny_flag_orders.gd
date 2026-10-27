@@ -132,3 +132,32 @@ func test_touch_needs_a_second_tap_on_the_same_tile() -> void:
 	assert_eq(sent.size(), 2)
 	input.free()
 	board.free()
+
+
+func test_off_board_taps_and_clicks_and_second_fingers_pass_through() -> void:
+	var board := BoardView.new()
+	board.set_map(_map())
+	var m := _model()
+	var input := OrderInput.new(m, board)
+	input.enabled = true
+	var tap := InputEventScreenTouch.new()
+	tap.pressed = true
+	tap.position = board.tile_center(Vector2i(-2, 1))  # off the map (e.g. the touch Menu button)
+	assert_false(input.handle_event(tap))
+	tap.position = board.tile_center(Vector2i(2, 1))
+	tap.index = 1  # a second finger
+	assert_false(input.handle_event(tap))
+	assert_eq(m.selected, -1)
+	tap.index = 0
+	assert_true(input.handle_event(tap))
+	assert_eq(m.selected, 0)
+	var mouse := InputEventMouseButton.new()
+	mouse.pressed = true
+	mouse.button_index = MOUSE_BUTTON_LEFT
+	mouse.position = board.tile_center(Vector2i(5, 9))  # below the 3-row map
+	assert_false(input.handle_event(mouse))
+	mouse.position = board.tile_center(Vector2i(4, 1))
+	assert_true(input.handle_event(mouse))
+	assert_eq(m.path_of(0).size(), 2)
+	input.free()
+	board.free()
