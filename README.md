@@ -71,7 +71,9 @@ docs/                    SESSION_NOTES.md (build history) + browser test screens
 
 ## What was verified
 
-On Godot 4.7.1 (Linux): all scripts compile with untyped declarations treated as errors; 22 unit tests pass; server + 2–3 bot clients pass the smoke test in 2D and 3D, both from source and as the exported dedicated-server binary. The web export ran in headless Chromium (WebGL 2 via SwiftShader) against the exported server: the join gate, keyboard input, server movement and the other player all worked, including over HTTPS → `wss://` through the shipped Caddy config. A Kenney-format test pack (GLB + spritesheet XML) went through the installer, atlas converter and the `MODEL_PATH`/`SPRITE_PATH` swap. Not tested: a real macOS machine, Safari, and real Kenney downloads (kenney.nl wasn't reachable from the build environment).
+On Godot 4.7.1 (Linux): every script compiles with untyped declarations treated as errors, the unit tests pass, and the Tiny Flag smoke test (server + 2 bot clients, plus a server restart) passes from source and as the exported dedicated-server binary. The web export ran in headless Chromium (WebGL 2) against the exported server: two pages played Red against Blue for three turns each (click a soldier, click a tile, Lock in; every planned piece moved), the server was restarted mid-game, both pages offered Rejoin and played on after it; an *iPad Pro 11 landscape* page (CDP touch events) tapped a soldier and a tile on the left half and moved it, with no touch stick drawn. Not tested: Safari, a real phone or tablet, and a real macOS machine.
+
+![Tiny Flag in the browser](docs/screenshots/tiny-flag-web.png)
 
 ## Branches and releases
 
