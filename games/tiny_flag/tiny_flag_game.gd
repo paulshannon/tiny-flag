@@ -21,9 +21,9 @@ signal match_over_received(result: Dictionary)
 
 ## Loaded on every peer: the server plays on it, clients check and draw with it.
 var map: FlagMap
-## Client: answer each turn_resolved with playback_done at once. Nothing is drawn yet,
-## so there is no playback to wait for; a board that animates turns this off and calls
-## send_playback_done itself.
+## Client: answer each turn_resolved with playback_done at once (bots, which draw
+## nothing). A person's FlagClient turns this off and sends playback_done when its
+## BoardView has played the turn.
 var auto_playback_done: bool = true
 ## Client: smoke counters (turns, leaks, own_moved).
 var tally := FlagClientTally.new()
@@ -53,6 +53,22 @@ func _physics_process(delta: float) -> void:
 
 func touch_stick() -> bool:
 	return false
+
+
+## People get the board, orders and HUD; bots stay headless and auto-ack playback.
+func _build_client_world() -> void:
+	if config.bot:
+		return
+	add_child(FlagClient.new(self))
+
+
+func make_menu() -> GameMenu:
+	return FlagMenu.new(control_names())
+
+
+## Orders are mouse and touch only; the one remappable action is the menu.
+func control_names() -> Dictionary:
+	return {InputSetup.MENU: "Back to select"}
 
 
 func _create_player(data: Dictionary) -> Node:
