@@ -9,7 +9,9 @@ const PATH_OK := Color(0.35, 0.95, 0.35, 0.9)
 const PATH_LATER := Color(0.85, 0.95, 1.0, 0.55)
 const PENDING := Color(1, 1, 1, 0.7)
 const SELECT := Color(1, 0.95, 0.4, 0.95)
+## Label size in screen pixels at zoom 1; grows with the zoom up to LABEL_ZOOM_MAX times.
 const FONT_SIZE: int = 8
+const LABEL_ZOOM_MAX: float = 2.0
 
 var map: FlagMap
 var model: OrderModel
@@ -65,11 +67,16 @@ func _draw_path(id: int) -> void:
 		_label(pts[split], "%d/%d" % [spent, model.budget_of(id)], PATH_OK)
 
 
+## Text is drawn at screen resolution (undoing the board's zoom), so it stays sharp
+## instead of being scaled up as pixel art.
 func _label(at_tile: Vector2, text: String, col: Color) -> void:
+	var zoom := maxf(get_global_transform().get_scale().x, 0.01)
+	var size := int(FONT_SIZE * minf(zoom, LABEL_ZOOM_MAX))
 	var font := ThemeDB.fallback_font
-	var at := at_tile + Vector2(-8, -5)
-	draw_string_outline(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, 2, Color(0, 0, 0, 0.8))
-	draw_string(font, at, text, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, col.lightened(0.3))
+	draw_set_transform(at_tile + Vector2(-8, -5), 0.0, Vector2.ONE / zoom)
+	draw_string_outline(font, Vector2.ZERO, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 3, Color(0, 0, 0, 0.8))
+	draw_string(font, Vector2.ZERO, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, col.lightened(0.3))
+	draw_set_transform(Vector2.ZERO)
 
 
 static func center(c: Vector2i) -> Vector2:

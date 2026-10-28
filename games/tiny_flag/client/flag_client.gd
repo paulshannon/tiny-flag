@@ -8,6 +8,7 @@ var game: TinyFlagGame
 var board: BoardView
 var model: OrderModel
 var input: OrderInput
+var camera: BoardCamera
 var hud: TurnHud
 ## A match_over that arrived while the board was still playing the final turn.
 var _held_result: Dictionary = {}
@@ -23,15 +24,17 @@ func _ready() -> void:
 	board.name = "Board"
 	board.set_map(game.map)
 	add_child(board)
+	camera = BoardCamera.new(board)
+	add_child(camera)
 	model = OrderModel.new(game.map)
-	input = OrderInput.new(model, board)
+	input = OrderInput.new(model, board, camera)
 	input.name = "OrderInput"
 	add_child(input)
 	hud = TurnHud.new()
 	hud.name = "TurnHud"
 	add_child(hud)
 	# HUD buttons, and the menu while back at select (no player of ours spawned).
-	input.blocked = func(pos: Vector2) -> bool: return hud.covers(pos) or game.local_player() == null
+	camera.blocked = func(pos: Vector2) -> bool: return hud.covers(pos) or game.local_player() == null
 
 	game.auto_playback_done = false
 	game.turn_started_received.connect(_on_turn_started)
@@ -47,7 +50,7 @@ func _ready() -> void:
 
 
 func _fit() -> void:
-	board.fit(get_viewport().get_visible_rect().size, TurnHud.TOP, TurnHud.BOTTOM)
+	camera.fit(get_viewport().get_visible_rect().size, TurnHud.TOP, TurnHud.BOTTOM)
 
 
 func _on_turn_started(seconds_left: float, view: Dictionary) -> void:

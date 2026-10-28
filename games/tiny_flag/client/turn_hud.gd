@@ -141,8 +141,9 @@ func on_turn_started(seconds_left: float, view: Dictionary) -> void:
 		_side.text = "You: " + FlagArt.TEAM_NAME[team]
 		_side_tag.theme_type_variation = FlagUi.TEAM_TAG[team]
 		_side.theme_type_variation = FlagUi.LIGHT_LABEL
-		_hint.text = "Tap a soldier, then a tile twice" if DisplayServer.is_touchscreen_available() \
-				else "Click a soldier, then a tile. Right-click clears."
+		_hint.text = "Tap a soldier, then a tile twice. Drag pans, pinch zooms." \
+				if DisplayServer.is_touchscreen_available() \
+				else "Click a soldier, then a tile. Right-click clears. Wheel zooms, drag pans."
 		_lock.text = "Lock in"
 		_clock_bar.visible = true
 	else:
