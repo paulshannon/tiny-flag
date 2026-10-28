@@ -10,7 +10,8 @@ const SIGHT_RADIUS: int = 5
 const TICKS: int = 8
 const MAX_PATH: int = 16
 const CAPTURES_TO_WIN: int = 3
-const TURN_LIMIT: int = 40
+## The farm is 64 tiles wide: one capture takes ~17 turns at best (road out, carrier back).
+const TURN_LIMIT: int = 80
 
 enum Result { ONGOING = -1, RED_WINS = 0, BLUE_WINS = 1, DRAW = 2 }
 

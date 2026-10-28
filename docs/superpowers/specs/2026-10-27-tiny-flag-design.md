@@ -15,7 +15,7 @@ Success for the first playable version:
 
 ## 1. Board, terrain, squads, match
 
-**Board.** One hand-built map, **32 × 18 tiles** of 16 px. Columns 0–15 are Red's half, 16–31 Blue's. The map is mirror-symmetric left↔right (with the base characters swapped), so neither side has an advantage; a unit test checks the symmetry. Each half has a **3 × 3 base**: the flag stands on the centre tile, and the other 8 tiles are home tiles for the pieces. Maps are text files, one character per tile, read by the server, the tests and the client alike.
+**Board.** One hand-built map, **64 × 36 tiles** of 16 px (it was 32 × 18; enlarged so there's room to manoeuvre and hide). Columns 0–31 are Red's half, 32–63 Blue's. At 1280 × 720 it fits the screen at zoom 1, between the HUD bars. The map is mirror-symmetric left↔right (with the base characters swapped), so neither side has an advantage; a unit test checks the symmetry. Each half has a **3 × 3 base**: the flag stands on the centre tile, and the other 8 tiles are home tiles for the pieces. Maps are text files, one character per tile, read by the server, the tests and the client alike.
 
 | Char | Terrain | Move cost (half-points) | Blocks sight | Hides a piece on it |
 |---|---|---|---|---|
@@ -36,7 +36,7 @@ Map constraints the farm map must meet (tested): symmetric; both bases fully rea
 
 **Flags and scoring.** A piece picks up the enemy flag by entering its tile. Stepping on your own flag does nothing. Carrying the enemy flag into your own base scores a **capture**. A carrier is always visible to both teams, crops or not. A tagged carrier drops the flag, which goes straight home. After a capture, both flags go home and every piece returns to its home tile.
 
-**Winning.** First to **3 captures**. After **40 turns** the side with more captures wins; equal is a draw. The result shows for 10 s, then a new match starts with the same people on the same sides.
+**Winning.** First to **3 captures**. After **80 turns** (40 on the first, smaller map) the side with more captures wins; equal is a draw. The result shows for 10 s, then a new match starts with the same people on the same sides.
 
 **Who plays.** The first two people to join get Red and Blue; anyone after that spectates. A side with no person (alone in the match, or after a disconnect) is played by a server bot. The next person to join takes over a bot's side at the start of the next turn. A reconnecting person gets a fresh peer id, so they can't be told apart from a newcomer: they simply take the bot-held side. A server restart starts a new match.
 
@@ -114,9 +114,9 @@ Spectators get the **public view**: a piece is in their rows only if both teams 
 - map parsing, bad map input, symmetry and the reachability / two-route constraints on `farm.txt`
 - path costs, A*, order validation accept and reject cases (wrong owner, gaps, walls, over budget, too long, NaN/huge coords)
 - vision: radius, hedge and tree blocking, crops hiding except when adjacent, carriers always visible
-- resolver: same-tile tag on each half, swap on one half, swap across the line (both tagged), tagger continues, tagged stop and respawn, pickup, tag-same-tick-as-pickup (tag wins), carrier movement points, capture and reset, the 40-turn result
+- resolver: same-tile tag on each half, swap on one half, swap across the line (both tagged), tagger continues, tagged stop and respawn, pickup, tag-same-tick-as-pickup (tag wins), carrier movement points, capture and reset, the turn-limit result
 - filtering: for random seeded matches, no team's playback or view ever contains an enemy outside its vision
-- a full bot-vs-bot match that finishes within 40 turns, deterministically
+- a full bot-vs-bot match that finishes within the turn limit, deterministically
 
 **Smoke test** (`tools/smoke.sh flag`, in `verify.sh` via `all`). Two `--bot` clients become Red and Blue; bots plan with `FlagBot`, lock in at once and skip animation.
 - Server report: ≥ 3 turns resolved, both sides' pieces moved, no invalid orders from bots.
