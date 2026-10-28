@@ -37,12 +37,10 @@ func _add_game() -> void:
 	add_child(_game)
 
 
-func _make_game(game: String) -> GameBase:
-	match game:
-		"3d":
-			return Arena3D.new()
-		_:
-			return Arena2D.new()
+## One game per name in Protocol.PORTS; LaunchConfig already maps unknown
+## names to Protocol.DEFAULT_GAME. This repo has just the one.
+func _make_game(_game_name: String) -> GameBase:
+	return TinyFlagGame.new()
 
 
 func _start_server() -> void:
@@ -65,7 +63,7 @@ func _start_client() -> void:
 		# Child of Main, not the game, so it survives the game being rebuilt
 		# after a disconnect. Harmless on non-touch screens: draws nothing
 		# until a touch arrives.
-		var controls := TouchControls.new(_game.action_button())
+		var controls := TouchControls.new(_game.action_button(), _game.touch_stick())
 		controls.name = "TouchControls"
 		add_child(controls)
 		_menu = _game.make_menu()
