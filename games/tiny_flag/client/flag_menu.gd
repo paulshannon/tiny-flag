@@ -68,8 +68,9 @@ func _ready() -> void:
 	_play = _button("Play", request_play)
 	_button("Controls", _show_controls)
 
-	_controls = ControlsEditor.new(_names, "Mouse: click a soldier, then a tile; right-click clears. "
-			+ "Touch: tap a soldier, then tap a tile twice.")
+	_controls = ControlsEditor.new(_names, "Mouse: click a soldier, then a tile; right-click clears; "
+			+ "wheel zooms, drag pans. Touch: tap a soldier, then tap a tile twice; "
+			+ "drag pans, pinch zooms.")
 	_controls.visible = false
 	_controls.closed.connect(_show_main)
 	pages.add_child(_controls)

@@ -1,14 +1,17 @@
 class_name BoardOverlay
 extends Node2D
 ## What BoardView draws over the terrain and under the pieces: tinted bases, the halfway
-## line, and while planning the selected piece and every planned path with its cost
-## (green within the piece's points, red over them), plus a touch tap's pending path.
+## line, and while planning the selected piece and every planned path: this turn's part
+## in green with its cost, the rest (later turns) paler with how many turns it all takes,
+## plus a touch tap's pending path.
 
 const PATH_OK := Color(0.35, 0.95, 0.35, 0.9)
-const PATH_OVER := Color(1.0, 0.3, 0.25, 0.9)
+const PATH_LATER := Color(0.85, 0.95, 1.0, 0.55)
 const PENDING := Color(1, 1, 1, 0.7)
 const SELECT := Color(1, 0.95, 0.4, 0.95)
+## Label size in screen pixels at zoom 1; grows with the zoom up to LABEL_ZOOM_MAX times.
 const FONT_SIZE: int = 8
+const LABEL_ZOOM_MAX: float = 2.0
 
 var map: FlagMap
 var model: OrderModel
@@ -46,18 +49,34 @@ func _draw_path(id: int) -> void:
 	var path := model.path_of(id)
 	if path.is_empty():
 		return
-	var col := PATH_OK if model.in_budget(id) else PATH_OVER
+	var now := model.this_turn(id)
+	var width := 2.0 if id == model.selected else 1.5
 	var pts := PackedVector2Array([center(model.tile_of(id))])
 	for s: Vector2i in path:
 		pts.append(center(s))
-	draw_polyline(pts, col, 2.0 if id == model.selected else 1.5)
-	var end := pts[pts.size() - 1]
-	draw_circle(end, 2.5, col)
-	var label := "%d/%d" % [model.cost_of(id), model.budget_of(id)]
+	var split := now.size()  # pts[split] is where this turn's part ends
+	if split < path.size():
+		draw_polyline(pts.slice(split), PATH_LATER, width)
+		var end := pts[pts.size() - 1]
+		draw_circle(end, 2.5, PATH_LATER)
+		_label(end, "%d turns" % model.turns_of(id), PATH_LATER)
+	if split > 0:
+		draw_polyline(pts.slice(0, split + 1), PATH_OK, width)
+		draw_circle(pts[split], 2.5, PATH_OK)
+		var spent := FlagPath.cost_of(map, model.tile_of(id), now)
+		_label(pts[split], "%d/%d" % [spent, model.budget_of(id)], PATH_OK)
+
+
+## Text is drawn at screen resolution (undoing the board's zoom), so it stays sharp
+## instead of being scaled up as pixel art.
+func _label(at_tile: Vector2, text: String, col: Color) -> void:
+	var zoom := maxf(get_global_transform().get_scale().x, 0.01)
+	var size := int(FONT_SIZE * minf(zoom, LABEL_ZOOM_MAX))
 	var font := ThemeDB.fallback_font
-	var at := end + Vector2(-8, -5)
-	draw_string_outline(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, 2, Color(0, 0, 0, 0.8))
-	draw_string(font, at, label, HORIZONTAL_ALIGNMENT_LEFT, -1, FONT_SIZE, col.lightened(0.3))
+	draw_set_transform(at_tile + Vector2(-8, -5), 0.0, Vector2.ONE / zoom)
+	draw_string_outline(font, Vector2.ZERO, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, 3, Color(0, 0, 0, 0.8))
+	draw_string(font, Vector2.ZERO, text, HORIZONTAL_ALIGNMENT_LEFT, -1, size, col.lightened(0.3))
+	draw_set_transform(Vector2.ZERO)
 
 
 static func center(c: Vector2i) -> Vector2:

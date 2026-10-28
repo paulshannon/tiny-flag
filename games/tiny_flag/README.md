@@ -4,9 +4,9 @@
 
 **Players:** 1v1. The first two people take Red and Blue; a side with nobody on it is played by the server's bot, and a person who joins later takes a bot's side at the next turn start. Everyone else watches as a spectator and sees only the public view: pieces both teams can see (in practice, pieces in sight of the other side) and flag carriers, never a piece hidden from either team. That view also runs one turn behind, so watching in a second browser tab doesn't beat the fog of war. **Dimension:** 2D. **Port:** 9082 (`Protocol.PORTS["flag"]`, the default game).
 
-**Kenney packs:** *Tiny Farm* (paths, wheat, trees, hedges, barns) and *Tiny Battle* (grass, ponds, soldiers, flags) for the board, and the *UI Pack* (buttons, panels, the Kenney Future font) for the HUD and menu, all CC0 under `assets/kenney/`. Every tile index and UI file is a constant in `client/flag_art.gd`, the only file that names Kenney paths.
+**Kenney packs:** *Tiny Farm* (paths, wheat, trees, hedges, hay bales) and *Tiny Battle* (grass, ponds, soldiers, flags) for the board, and the *UI Pack* (buttons, panels, the Kenney Future font) for the HUD and menu, all CC0 under `assets/kenney/`. Every tile index and UI file is a constant in `client/flag_art.gd`, the only file that names Kenney paths.
 
-**Controls:** mouse: click a soldier, click a tile to plan its path (green within its points, red over), click again to extend from the path's end; right-click or Clear path clears it. Touch: tap a soldier, tap a tile to preview, tap it again to confirm. Lock in sends the orders early; every change is sent again until the timer ends. Esc / Start / the touch Menu button goes back to the menu.
+**Controls:** mouse: click a soldier, click a tile to plan its path, click again to extend from the path's end. A path can be longer than one turn: the part within the soldier's points (green, with its cost) is walked this turn, and the rest (pale, with the turns it all takes) carries over to the next turn's plan, where you can change it; right-click or Clear path clears it. Touch: tap a soldier, tap a tile to preview, tap it again to confirm. **View:** the board opens fitted to the screen; mouse wheel (or trackpad pinch) zooms in whole steps at the cursor and a left or middle drag pans; on touch, one finger drags and two fingers pinch. A drag is never a click, so planning only happens on a press and release in place. Lock in sends the orders early; every change is sent again until the timer ends. Esc / Start / the touch Menu button goes back to the menu.
 
 ![Tiny Flag planning a turn](../../docs/screenshots/tiny-flag.png)
 
@@ -21,9 +21,10 @@
 | `flag_sides.gd` | server | who plays which side, who waits, who watches |
 | `sim/` | both | pure rules: `FlagMap`, `FlagState`, `FlagPath` (orders), `FlagVision`, `FlagResolver`, `FlagWire` (what each side is sent), `FlagBot` |
 | `client/flag_client.gd` | client (people) | `FlagClient`: wires the game's messages to the board, orders and HUD; sends orders, lock-in and `playback_done` after the playback (bots skip all of it and stay headless) |
-| `client/board_view.gd` | client | `BoardView`: terrain, pieces, flags, faded last-seen markers, playback (0.3 s per tick), `tile_at`; fits the board at a whole zoom |
+| `client/board_view.gd` | client | `BoardView`: terrain, pieces, flags, faded last-seen markers, playback (0.3 s per tick), `tile_at` |
+| `client/board_camera.gd` | client | `BoardCamera`: pan and zoom (fitted view as the minimum, whole-step wheel zoom, pinch, drag) and telling drags from clicks and taps |
 | `client/board_terrain.gd`, `client/board_overlay.gd` | client | painting the map into two `TileMapLayer`s; bases, halfway line and planned paths with their costs |
-| `client/order_model.gd`, `client/order_input.gd` | client | `OrderModel` (pure: selection, paths, budgets, wire orders); `OrderInput` (mouse and touch to `OrderModel`) |
+| `client/order_model.gd`, `client/order_input.gd` | client | `OrderModel` (pure: selection, paths, budgets, wire orders); `OrderInput` (BoardCamera's clicks and taps to `OrderModel`) |
 | `client/turn_hud.gd`, `client/flag_menu.gd` | client | `TurnHud` (score, turn, countdown, Lock in, Clear path, event toasts, result); `FlagMenu` (Play, Controls) |
 | `client/flag_art.gd`, `client/flag_ui.gd` | client | `FlagArt`: Kenney sheets, tile indices and UI Pack files; `FlagUi`: the UI Pack theme the HUD and menu share (built once, in code) |
 | `maps/farm.txt` | both | the map, as text (exported via `include_filter` in `export_presets.cfg`) |

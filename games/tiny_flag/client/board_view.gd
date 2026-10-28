@@ -94,17 +94,6 @@ func _build() -> void:
 		_flags.append(s)
 
 
-## Scales by the largest whole zoom that fits the board between `top` and `bottom`
-## margins of a `size` viewport, centred.
-func fit(size: Vector2, top: float, bottom: float) -> void:
-	var w := float(map.width * FlagArt.TILE)
-	var h := float(map.height * FlagArt.TILE)
-	var zoom := maxf(1.0, floorf(minf(size.x / w, (size.y - top - bottom) / h)))
-	scale = Vector2(zoom, zoom)
-	position = Vector2(roundf((size.x - w * zoom) / 2.0),
-			roundf(top + maxf(0.0, (size.y - top - bottom - h * zoom) / 2.0)))
-
-
 func tile_at(screen_pos: Vector2) -> Vector2i:
 	var local := _screen_xform().affine_inverse() * screen_pos
 	return Vector2i(floori(local.x / FlagArt.TILE), floori(local.y / FlagArt.TILE))
@@ -135,6 +124,12 @@ func show_view(view: Dictionary) -> void:
 
 
 ## Planned paths (null hides them), and a touch tap's pending path.
+## The zoom changed (BoardCamera): labels are drawn at screen resolution, so redraw.
+func zoom_changed() -> void:
+	if _overlay != null:
+		_overlay.queue_redraw()
+
+
 func show_paths(model: OrderModel, pending: Array[Vector2i] = []) -> void:
 	_overlay.model = model
 	_overlay.pending = pending

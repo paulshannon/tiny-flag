@@ -24,7 +24,7 @@ Success for the first playable version:
 | `w` | tall crops (wheat, corn) | 4 | no | yes, from viewers not adjacent |
 | `t` | tree | 4 | yes | no |
 | `h` | hedge / fence | impassable | yes | — |
-| `B` | barn / building | impassable | yes | — |
+| `B` | building (drawn as hay bales) | impassable | yes | — |
 | `~` | pond / stream | impassable | no | — |
 | `R` / `U` | Red / Blue base | 2 | no | no |
 
@@ -43,7 +43,9 @@ Map constraints the farm map must meet (tested): symmetric; both bases fully rea
 ## 2. A turn
 
 **Planning.** The client shows the team's current view: own pieces, enemies in sight, both flags, and faded "last seen" markers. These markers are drawn by the client from positions it was legitimately sent.
-- Mouse: click a piece, click a tile. An A* path appears with its cost, green when within the piece's movement points and red when not. Clicking another tile extends the path from its end (to route around things). Right-click or ✕ clears it.
+- Mouse: click a piece, click a tile. An A* path appears. Clicking another tile extends the path from its end (to route around things). Right-click or ✕ clears it.
+- **View:** the board opens fitted between the HUD bars and can be zoomed (wheel in whole steps at the cursor, trackpad or two-finger pinch) up to 6x and panned (left or middle mouse drag, one-finger drag), never past the board's edges. Clicks and taps act on release, and only if the pointer didn't drag.
+- Paths can span several turns. The part within the piece's movement points is drawn green with its cost and is what gets sent; the rest is drawn pale with the number of turns the whole path takes. At the next turn start the rest becomes that piece's plan (sent at once, and editable like any other), but only if the piece ended the turn where its sent part ended: a tagged piece, a capture reset, or a piece that stopped when it picked up a flag drops it. This is client-side only; the server still gets one turn's path per piece.
 - Touch: tap a piece, tap a tile, tap the same tile again to confirm.
 - **Lock in** sends the orders. Until the timer ends you can still change them; every change is sent again.
 - Movement is 4-way (no diagonals).
