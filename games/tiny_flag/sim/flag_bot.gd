@@ -10,8 +10,13 @@ const ATTACKERS: int = 2
 const FLEE_RANGE: int = 3
 ## Defenders idle within this distance of their flag.
 const HOLD_RADIUS: int = 4
-const LANE_SPREAD: int = 2
-const LANE_DEPTH: int = 3
+## Defenders chase enemies on their half within this fraction of the map's width of their
+## flag (Manhattan), so they don't run off down the road and leave it open.
+const CHASE_RANGE: float = 0.25
+## Attack lanes spread over this fraction of the map's height either side of the enemy
+## flag's row, and turn toward the flag this fraction of the width past the halfway line.
+const LANE_SPREAD: float = 0.3
+const LANE_DEPTH: float = 0.125
 
 var _rng := RandomNumberGenerator.new()
 ## Piece id -> the tile that defender holds, chosen on first use.
@@ -67,13 +72,15 @@ func _attack(map: FlagMap, team: int, id: int, at: Vector2i, flag: Vector2i, ene
 	return path if not path.is_empty() else FlagPath.find_path(map, at, flag)
 
 
-## Attackers approach on their own seeded lane (a row off the road) until past the midline,
+## Attackers approach on their own seeded lane (a row up or down the flank) until past the midline,
 ## so two attackers do not meet head-on in the corridor.
 func _via_lane(map: FlagMap, team: int, id: int, at: Vector2i, flag: Vector2i) -> Vector2i:
 	if not _lane.has(id):
-		_lane[id] = _rng.randi_range(-LANE_SPREAD, LANE_SPREAD)
+		var spread := int(map.height * LANE_SPREAD)
+		_lane[id] = _rng.randi_range(-spread, spread)
 	var dir := 1 if team == FlagMap.RED else -1
-	var gate := Vector2i(map.width / 2 + dir * LANE_DEPTH - (1 if dir < 0 else 0), flag.y + int(_lane[id]))
+	var depth := int(map.width * LANE_DEPTH)
+	var gate := Vector2i(map.width / 2 + dir * depth - (1 if dir < 0 else 0), flag.y + int(_lane[id]))
 	if (gate.x - at.x) * dir <= 0 or map.cost(gate) < 0:
 		return flag
 	return gate
@@ -81,8 +88,9 @@ func _via_lane(map: FlagMap, team: int, id: int, at: Vector2i, flag: Vector2i) -
 
 func _defend(map: FlagMap, team: int, id: int, at: Vector2i, enemies: Array[Vector2i]) -> Array[Vector2i]:
 	var own_half: Array[Vector2i] = []
+	var reach := int(map.width * CHASE_RANGE)
 	for e: Vector2i in enemies:
-		if map.side_of(e) == team:
+		if map.side_of(e) == team and _dist(e, map.flag_home(team)) <= reach:
 			own_half.append(e)
 	var near := _nearest(at, own_half)
 	if near.x >= 0:

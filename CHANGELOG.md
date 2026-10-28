@@ -14,6 +14,7 @@ Each release's section becomes the notes of its GitHub Release (`tools/release_n
 - Tiny Flag's HUD and menu are themed with the Kenney UI Pack: its buttons (Blue, a green Lock in, a yellow Clear path with the pack's cross), light panels behind the HUD text, a team-coloured "You" tag and result banner, and the Kenney Future font. The Clear path button's ✕ used to draw as a missing-glyph box in the browser.
 
 ### Changed
+- Tiny Flag's farm map is four times larger: 64 × 36 tiles instead of 32 × 18, with flanking lanes, farmyards, orchards, ponds and wide wheat fields in the middle. The turn limit doubles to 80 so a match still has time for captures.
 - The web build is ~2.4 MB of game data instead of ~17.7 MB: both export presets leave out the Kenney packs Tiny Flag doesn't load (Cursor, Emotes, Input Prompts, Interface Sounds, Mobile Controls, Tiny City/Dungeon/Factory/Ski/Town). Tiny Farm, Tiny Battle and the UI Pack (the HUD and menu theme) are still exported.
 - `GameBase.touch_stick()` is now in the starter too (paulshannon/game-starter `b206f8a`, which includes this repo's `if stick_enabled:` cleanup of the stick drawing).
 
