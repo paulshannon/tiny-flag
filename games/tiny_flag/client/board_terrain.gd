@@ -2,7 +2,7 @@ class_name BoardTerrain
 extends RefCounted
 ## Paints a FlagMap into two TileMapLayers sharing FlagArt.tile_set(): the ground (Tiny
 ## Battle grass and ponds, Tiny Farm dirt paths) and the props over it (Tiny Farm wheat,
-## trees, hedges and barns). Bases are plain grass; BoardOverlay tints them.
+## trees, hedges and hay bales). Bases are plain grass; BoardOverlay tints them.
 
 const T := FlagMap.Terrain
 

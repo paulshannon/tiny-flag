@@ -37,8 +37,10 @@ const PATH_BOTTOM_END: int = 37
 const CROPS: int = 66      # tall wheat
 const TREE: int = 27       # small pine (15 is the bottom half of the tall two-tile pine)
 const HEDGE: int = 39      # bush
-const BUILDING_LEFT: int = 126   # barn wall with doors
-const BUILDING_RIGHT: int = 128  # barn wall with window
+## Buildings are one-tile hay bales (the pack's barn is many tiles tall); a run of them
+## alternates plain and banded.
+const BUILDING_LEFT: int = 96    # hay bale
+const BUILDING_RIGHT: int = 97   # hay bale with red bands
 
 # --- Tiny Battle: pieces and flags -----------------------------------------------
 ## Per team (FlagMap.RED, FlagMap.BLUE).

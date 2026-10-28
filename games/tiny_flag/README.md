@@ -4,7 +4,7 @@
 
 **Players:** 1v1. The first two people take Red and Blue; a side with nobody on it is played by the server's bot, and a person who joins later takes a bot's side at the next turn start. Everyone else watches as a spectator and sees only the public view: pieces both teams can see (in practice, pieces in sight of the other side) and flag carriers, never a piece hidden from either team. That view also runs one turn behind, so watching in a second browser tab doesn't beat the fog of war. **Dimension:** 2D. **Port:** 9082 (`Protocol.PORTS["flag"]`, the default game).
 
-**Kenney packs:** *Tiny Farm* (paths, wheat, trees, hedges, barns) and *Tiny Battle* (grass, ponds, soldiers, flags) for the board, and the *UI Pack* (buttons, panels, the Kenney Future font) for the HUD and menu, all CC0 under `assets/kenney/`. Every tile index and UI file is a constant in `client/flag_art.gd`, the only file that names Kenney paths.
+**Kenney packs:** *Tiny Farm* (paths, wheat, trees, hedges, hay bales) and *Tiny Battle* (grass, ponds, soldiers, flags) for the board, and the *UI Pack* (buttons, panels, the Kenney Future font) for the HUD and menu, all CC0 under `assets/kenney/`. Every tile index and UI file is a constant in `client/flag_art.gd`, the only file that names Kenney paths.
 
 **Controls:** mouse: click a soldier, click a tile to plan its path (green within its points, red over), click again to extend from the path's end; right-click or Clear path clears it. Touch: tap a soldier, tap a tile to preview, tap it again to confirm. Lock in sends the orders early; every change is sent again until the timer ends. Esc / Start / the touch Menu button goes back to the menu.
 

@@ -24,7 +24,7 @@ Success for the first playable version:
 | `w` | tall crops (wheat, corn) | 4 | no | yes, from viewers not adjacent |
 | `t` | tree | 4 | yes | no |
 | `h` | hedge / fence | impassable | yes | — |
-| `B` | barn / building | impassable | yes | — |
+| `B` | building (drawn as hay bales) | impassable | yes | — |
 | `~` | pond / stream | impassable | no | — |
 | `R` / `U` | Red / Blue base | 2 | no | no |
 

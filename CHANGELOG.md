@@ -23,6 +23,7 @@ Each release's section becomes the notes of its GitHub Release (`tools/release_n
 
 ### Fixed
 - Tiny Flag trees are whole: the board drew the bottom half of Tiny Farm's two-tile pine (a trunk with no top), and now uses the pack's one-tile pine.
+- Tiny Flag buildings are drawn as one-tile hay bales. They were the bottom row of Tiny Farm's big barn (doors and a window with no barn above them).
 - Tiny Flag spectators see only the public view (pieces both teams can see, plus flag carriers), still one turn behind. They used to get every piece, so a second browser tab could see through the fog of war.
 - Tiny Flag's result banner appears once the final turn's playback has finished, instead of covering the board while the winning move animates.
 - A Tiny Flag finger whose release was taken by a button, or lost to an app switch or system gesture, no longer blocks every later tap until the next turn: fingers are tracked from every input event and forgotten when the window loses focus.
