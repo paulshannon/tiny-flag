@@ -46,23 +46,73 @@ func test_second_click_extends_from_path_end() -> void:
 	assert_eq(m.path_of(0), path)
 
 
-func test_over_budget_path_not_in_wire_orders() -> void:
+func test_long_path_sends_this_turns_part() -> void:
 	var m := _model()
 	m.click_tile(Vector2i(2, 1))
 	m.click_tile(Vector2i(8, 1))  # 6 grass tiles: 12 > 8
 	assert_eq(m.cost_of(0), 12)
 	assert_false(m.in_budget(0))
+	assert_eq(m.turns_of(0), 2)
+	assert_eq(m.this_turn(0), [Vector2i(3, 1), Vector2i(4, 1), Vector2i(5, 1), Vector2i(6, 1)] as Array[Vector2i])
 	m.click_tile(Vector2i(2, 2))
 	assert_eq(m.selected, 1)
 	m.click_tile(Vector2i(4, 2))
 	assert_true(m.in_budget(1))
-	var wire := m.wire_orders()
-	assert_eq(wire.size(), 1)
-	assert_eq(wire[0][0], 1)
-	assert_eq(wire[0][1], PackedInt32Array([3, 2, 4, 2]))
+	assert_eq(m.turns_of(1), 1)
+	assert_eq(m.wire_orders(), [[0, PackedInt32Array([3, 1, 4, 1, 5, 1, 6, 1])], [1, PackedInt32Array([3, 2, 4, 2])]])
 	m.clear(1)
 	assert_eq(m.path_of(1).size(), 0)
-	assert_eq(m.wire_orders().size(), 0)
+	assert_eq(m.wire_orders().size(), 1)
+
+
+## The next turn's view, with Red's pieces on the given tiles.
+func _next_view(m: OrderModel, p0: Vector2i, turn_step: int = 1) -> void:
+	m.set_view({"turn": m.turn + turn_step, "team": R, "pieces": [[0, R, p0.x, p0.y, 0, 0],
+			[1, R, 2, 2, 0, 0], [5, B, 9, 1, 0, 0]], "flags": [[1, 1], [10, 1]], "result": -1})
+
+
+func test_rest_of_a_long_path_carries_over_to_the_next_turn() -> void:
+	var m := _model()
+	m.click_tile(Vector2i(2, 1))
+	m.click_tile(Vector2i(8, 1))
+	m.click_tile(Vector2i(2, 2))
+	m.click_tile(Vector2i(4, 2))  # fits: nothing left over
+	_next_view(m, Vector2i(6, 1))
+	assert_eq(m.turn, 4)
+	assert_eq(m.path_of(0), [Vector2i(7, 1), Vector2i(8, 1)] as Array[Vector2i])
+	assert_true(m.in_budget(0))
+	assert_eq(m.path_of(1).size(), 0)
+	assert_eq(m.wire_orders(), [[0, PackedInt32Array([7, 1, 8, 1])]])
+	# The carried path is a plan like any other: it can be extended or cleared.
+	m.select(0)
+	m.click_tile(Vector2i(8, 2))
+	assert_eq(m.end_of(0), Vector2i(8, 2))
+
+
+func test_rest_is_dropped_when_the_piece_did_not_get_there() -> void:
+	for case: Array in [[Vector2i(0, 0), 1], [Vector2i(6, 1), 2]]:  # tagged home; a skipped turn
+		var m := _model()
+		m.click_tile(Vector2i(2, 1))
+		m.click_tile(Vector2i(8, 1))
+		_next_view(m, case[0], case[1])
+		assert_eq(m.path_of(0).size(), 0, str(case))
+		assert_eq(m.wire_orders().size(), 0, str(case))
+
+
+func test_carried_orders_are_sent_at_turn_start() -> void:
+	var board := BoardView.new()
+	board.set_map(_map())
+	var m := _model()
+	var input := OrderInput.new(m, board)
+	var sent: Array = []
+	input.orders_changed.connect(func(t: int, o: Array) -> void: sent.append([t, o]))
+	m.click_tile(Vector2i(2, 1))
+	m.click_tile(Vector2i(8, 1))
+	_next_view(m, Vector2i(6, 1))
+	input.reset()
+	assert_eq(sent, [[4, [[0, PackedInt32Array([7, 1, 8, 1])]]]])
+	input.free()
+	board.free()
 
 
 func test_clicking_enemy_or_wall_does_nothing() -> void:

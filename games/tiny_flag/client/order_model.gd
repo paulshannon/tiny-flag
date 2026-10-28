@@ -5,8 +5,11 @@ extends RefCounted
 ## BoardView draws it, and wire_orders() is what TinyFlagGame.send_orders sends.
 ##
 ## Click an own piece to select it; click a tile to plan the cheapest path there, and
-## click again to extend from the path's end (to route around things). A path over the
-## piece's points is kept, drawn red, and not sent.
+## click again to extend from the path's end (to route around things). A path may be
+## longer than one turn: the part within the piece's points (this_turn) is sent, and the
+## rest carries over to the next turn's plan, where it can still be changed. It carries
+## over only if the piece ended the turn where that part ended (not tagged, not reset by
+## a capture, not stopped by picking up a flag).
 
 var map: FlagMap
 ## The turn being planned (view["turn"]); send_orders and send_lock_in use it.
@@ -28,12 +31,23 @@ func _init(board_map: FlagMap) -> void:
 	map = board_map
 
 
-## A turn_started view: our pieces this turn. Paths and selection start empty.
+## A turn_started view: our pieces this turn. Selection starts empty; paths start with
+## what is left of last turn's multi-turn paths (see the class comment).
 func set_view(view: Dictionary) -> void:
 	var t: Variant = view.get("turn")
-	turn = int(t) if typeof(t) == TYPE_INT else -1
+	var new_turn := int(t) if typeof(t) == TYPE_INT else -1
 	var tm: Variant = view.get("team")
-	team = int(tm) if typeof(tm) == TYPE_INT else FlagWire.SPECTATOR
+	var new_team := int(tm) if typeof(tm) == TYPE_INT else FlagWire.SPECTATOR
+	# id -> [tile this turn's part ends on, the rest of the path]
+	var carry: Dictionary = {}
+	if new_turn == turn + 1 and new_team == team:
+		for id: int in _paths:
+			var now := this_turn(id)
+			var rest := path_of(id).slice(now.size())
+			if not now.is_empty() and not rest.is_empty():
+				carry[id] = [now[now.size() - 1], rest]
+	turn = new_turn
+	team = new_team
 	selected = -1
 	_tiles = {}
 	_carrying = {}
@@ -45,6 +59,11 @@ func set_view(view: Dictionary) -> void:
 			_tiles[row[0]] = Vector2i(row[2], row[3])
 			if row[4] == 1:
 				_carrying[row[0]] = true
+	for id: int in carry:
+		if _tiles.get(id, Vector2i(-1, -1)) == carry[id][0]:
+			var rest: Array[Vector2i] = []
+			rest.assign(carry[id][1])
+			_paths[id] = rest
 
 
 ## Own untagged piece ids, ascending.
@@ -113,6 +132,7 @@ func end_of(id: int) -> Vector2i:
 	return tile_of(id) if path.is_empty() else path[path.size() - 1]
 
 
+## Cost of the whole path, all turns.
 func cost_of(id: int) -> int:
 	if not _tiles.has(id):
 		return 0
@@ -123,16 +143,37 @@ func budget_of(id: int) -> int:
 	return FlagState.CARRIER_POINTS if _carrying.has(id) else FlagState.MOVE_POINTS
 
 
+## The start of the path that fits in this turn's points: what is sent.
+func this_turn(id: int) -> Array[Vector2i]:
+	return FlagPath.trim_to_budget(map, tile_of(id), path_of(id), budget_of(id))
+
+
+## True if the whole path fits in this turn.
 func in_budget(id: int) -> bool:
 	var path := path_of(id)
-	return not path.is_empty() and path.size() <= FlagState.MAX_PATH \
-			and cost_of(id) >= 0 and cost_of(id) <= budget_of(id)
+	return not path.is_empty() and this_turn(id).size() == path.size()
 
 
-## [[piece_id, PackedInt32Array path], ...] for in-budget paths only, by id.
+## Turns the whole path takes at this turn's points (0 with no path).
+func turns_of(id: int) -> int:
+	var rest := path_of(id)
+	var at := tile_of(id)
+	var turns := 0
+	while not rest.is_empty():
+		var now := FlagPath.trim_to_budget(map, at, rest, budget_of(id))
+		if now.is_empty():
+			break
+		turns += 1
+		at = now[now.size() - 1]
+		rest = rest.slice(now.size())
+	return turns
+
+
+## [[piece_id, PackedInt32Array path], ...]: this turn's part of every path, by id.
 func wire_orders() -> Array:
 	var out: Array = []
 	for id: int in piece_ids():
-		if in_budget(id):
-			out.append([id, FlagPath.encode(path_of(id))])
+		var now := this_turn(id)
+		if not now.is_empty():
+			out.append([id, FlagPath.encode(now)])
 	return out

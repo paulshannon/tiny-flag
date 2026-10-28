@@ -6,7 +6,7 @@
 
 **Kenney packs:** *Tiny Farm* (paths, wheat, trees, hedges, hay bales) and *Tiny Battle* (grass, ponds, soldiers, flags) for the board, and the *UI Pack* (buttons, panels, the Kenney Future font) for the HUD and menu, all CC0 under `assets/kenney/`. Every tile index and UI file is a constant in `client/flag_art.gd`, the only file that names Kenney paths.
 
-**Controls:** mouse: click a soldier, click a tile to plan its path (green within its points, red over), click again to extend from the path's end; right-click or Clear path clears it. Touch: tap a soldier, tap a tile to preview, tap it again to confirm. Lock in sends the orders early; every change is sent again until the timer ends. Esc / Start / the touch Menu button goes back to the menu.
+**Controls:** mouse: click a soldier, click a tile to plan its path, click again to extend from the path's end. A path can be longer than one turn: the part within the soldier's points (green, with its cost) is walked this turn, and the rest (pale, with the turns it all takes) carries over to the next turn's plan, where you can change it; right-click or Clear path clears it. Touch: tap a soldier, tap a tile to preview, tap it again to confirm. Lock in sends the orders early; every change is sent again until the timer ends. Esc / Start / the touch Menu button goes back to the menu.
 
 ![Tiny Flag planning a turn](../../docs/screenshots/tiny-flag.png)
 

@@ -104,11 +104,13 @@ func clear_selected() -> void:
 	_changed()
 
 
-## A new turn's model: nothing has been sent for it yet.
+## A new turn's model: nothing has been sent for it yet. Paths carried over from the
+## last turn are sent straight away, so they count even if nobody touches them.
 func reset() -> void:
 	_pending = Vector2i(-1, -1)
 	_last_sent = []
 	_fingers.clear()  # a release some other control took can't block the next turn
+	_changed()
 
 
 ## Fingers down, tracked even while disabled so none is left stuck down.
